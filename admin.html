@@ -116,6 +116,28 @@
     <!-- ---------- สมาชิก ---------- -->
     <div id="paneMem" class="hide">
       <div class="card">
+        <h2 class="card__title">เพิ่มสมาชิกใหม่</h2>
+        <p class="card__hint">ระบบจะออกรหัสชั่วคราวให้ เอาไปบอกเจ้าตัว แล้วเค้าตั้งรหัสเองตอนเข้าระบบครั้งแรก</p>
+
+        <label for="inNewName">ชื่อ-นามสกุล</label>
+        <input id="inNewName" type="text" placeholder="เช่น สมหญิง ใจดี">
+
+        <label for="inNewPhone">เบอร์โทรศัพท์ (ใช้เข้าระบบ ห้ามซ้ำ)</label>
+        <input id="inNewPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="0812345678">
+
+        <label for="selNewRole">สิทธิ์การใช้งาน</label>
+        <select id="selNewRole">
+          <option value="User">สมาชิก (User)</option>
+          <option value="Admin">แอดมิน (Admin)</option>
+        </select>
+
+        <div class="btn-row">
+          <button id="btAddMem" class="btn">เพิ่มสมาชิก</button>
+        </div>
+        <div id="msAdd" class="note hide"></div>
+      </div>
+
+      <div class="card">
         <h2 class="card__title">สมาชิก</h2>
         <p class="card__hint">ค้นหาเพื่อดูสถานะ หรือรีเซ็ตรหัสให้คนที่เข้าระบบไม่ได้</p>
 

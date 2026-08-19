@@ -206,7 +206,8 @@ textarea { min-height: 72px; resize: vertical; }
 .rules li.is-ok::before { content: '✓'; }
 
 /* ---------- แจ้งเตือน ---------- */
-.note { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; margin-top: 14px; }
+/* pre-line เพื่อให้ข้อความหลายบรรทัด (เช่นรหัสชั่วคราว) ขึ้นบรรทัดใหม่จริง */
+.note { padding: 11px 14px; border-radius: 10px; font-size: 13.5px; margin-top: 14px; white-space: pre-line; }
 .note--err  { background: #fdf4f2; color: var(--danger); border: 1px solid #eed6cf; }
 .note--ok   { background: #eef6f0; color: var(--ok);     border: 1px solid #cfe4d6; }
 .note--info { background: var(--gold-bg); color: #7a6122; border: 1px solid var(--gold-soft); }

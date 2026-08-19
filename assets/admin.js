@@ -200,6 +200,32 @@
     });
   }
 
+  // ---------------- เพิ่มสมาชิกใหม่ ----------------
+  function doAddMember() {
+    var name  = el('inNewName').value.trim();
+    var phone = el('inNewPhone').value.replace(/[^0-9]/g, '');
+    say(el('msAdd'), '', '');
+
+    if (!name)                       { say(el('msAdd'), 'err', 'ใส่ชื่อ-นามสกุลก่อนนะครับ'); return; }
+    if (!/^0[0-9]{9}$/.test(phone))  { say(el('msAdd'), 'err', 'เบอร์โทรต้องเป็นเลข 10 หลัก เริ่มด้วย 0'); return; }
+
+    F.busy(true, ['กำลังเพิ่มสมาชิก...']);
+    F.auth('adminAddMember', { name: name, phone: phone, status: el('selNewRole').value })
+      .then(function (r) {
+        el('inNewName').value = ''; el('inNewPhone').value = '';
+        el('selNewRole').value = 'User';
+        say(el('msAdd'), 'ok',
+          'เพิ่ม ' + r.name + ' เรียบร้อย (' + r.member_id + ')\n' +
+          'แจ้งเจ้าตัวว่า —\n' +
+          'เข้าระบบด้วยเบอร์ : ' + r.phone + '\n' +
+          'รหัสชั่วคราว : ' + r.temp_password + '\n' +
+          '(ระบบจะบังคับให้ตั้งรหัสใหม่เองตอนเข้าครั้งแรก)');
+        doMemQuery();
+      })
+      .catch(function (err) { say(el('msAdd'), 'err', err.message); })
+      .then(function () { F.busy(false); });
+  }
+
   // ---------------- จัดการสมาชิก ----------------
   function doMemQuery() {
     el('memList').innerHTML = '<div class="empty">กำลังโหลด...</div>';
@@ -282,6 +308,10 @@
     el('btUpClear').onclick = function () { picked = null; show(el('upBox'), false); };
     el('btMemQ').onclick    = doMemQuery;
     el('inMemQ').onkeydown  = function (e) { if (e.key === 'Enter') doMemQuery(); };
+
+    el('btAddMem').onclick    = doAddMember;
+    el('inNewPhone').oninput  = function () { this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10); };
+    el('inNewPhone').onkeydown = function (e) { if (e.key === 'Enter') doAddMember(); };
 
     document.querySelectorAll('.tab').forEach(function (t) {
       t.onclick = function () {
