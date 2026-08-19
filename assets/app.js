@@ -395,9 +395,79 @@
     });
   }
 
+  // ---------------- ติดตั้งเป็นแอป (PWA) ----------------
+  var deferredPrompt = null;
+
+  function isStandalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+           window.navigator.standalone === true;
+  }
+  function isIos() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function isSafari() {
+    var ua = navigator.userAgent;
+    return /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|Line|FBAN|FBAV/.test(ua);
+  }
+  function dismissed() {
+    try { return localStorage.getItem('fa_ins_off') === '1'; } catch (e) { return false; }
+  }
+
+  function setupInstall() {
+    // ลงทะเบียน service worker (ต้องมีเพื่อให้ติดตั้งได้ และเปิดครั้งต่อไปไวขึ้น)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* ไม่ได้ก็ไม่เป็นไร */ });
+    }
+
+    // ติดตั้งอยู่แล้ว หรือกดปิดไปแล้ว -> ไม่ต้องกวน
+    if (isStandalone() || dismissed()) return;
+
+    // Android / Chrome : เบราว์เซอร์จะบอกเองว่าติดตั้งได้
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      show(el('insBar'), true);
+    });
+
+    // iOS : Apple ไม่ยอมให้เว็บเด้งปุ่มติดตั้ง -> แนะนำขั้นตอนให้แทน
+    if (isIos() && isSafari()) {
+      setTimeout(function () { show(el('insBar'), true); }, 1200);
+    }
+
+    window.addEventListener('appinstalled', function () {
+      show(el('insBar'), false);
+      deferredPrompt = null;
+    });
+  }
+
+  function doInstall() {
+    if (deferredPrompt) {                 // Android / Chrome
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function () {
+        deferredPrompt = null;
+        show(el('insBar'), false);
+      });
+    } else {                              // iOS หรือเบราว์เซอร์ที่ไม่รองรับปุ่ม
+      show(el('mdIos'), true);
+    }
+  }
+
+  function bindInstall() {
+    el('btInstall').onclick = doInstall;
+    el('insClose').onclick  = function () {
+      show(el('insBar'), false);
+      try { localStorage.setItem('fa_ins_off', '1'); } catch (e) {}
+    };
+    el('iosClose').onclick = function () { show(el('mdIos'), false); };
+    el('mdIos').onclick    = function (e) { if (e.target === el('mdIos')) show(el('mdIos'), false); };
+  }
+
   // ---------------- เริ่มทำงาน ----------------
   function start() {
     bind();
+    bindInstall();
+    setupInstall();
     if (!F.getToken()) { screen('scLogin'); return; }
 
     // มี token อยู่แล้ว -> เข้าใช้งานต่อได้เลยไม่ต้อง login ซ้ำ

@@ -4,7 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FA Member Club</title>
+<meta name="description" content="ระบบสมาชิก FA — ดูและดาวน์โหลดผลงานกิจกรรมของคุณ">
 <meta name="theme-color" content="#fbf9f5">
+
+<!-- ติดตั้งเป็นแอปบนมือถือได้ (PWA) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="FA Member">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- ต่อสายรอไว้ล่วงหน้า ลดเวลารอตอนเรียกหลังบ้านและโหลดรูป -->
@@ -145,6 +155,37 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ แถบชวนติดตั้งแอป ============ -->
+  <div id="insBar" class="installbar hide">
+    <img src="icons/icon-192.png" alt="">
+    <div class="installbar__txt">
+      <b>ติดตั้งเป็นแอปได้</b>
+      เปิดจากหน้าจอโหมแรก ไม่ต้องพิมพ์ลิงก์
+    </div>
+    <button id="btInstall" class="btn btn--sm">ติดตั้ง</button>
+    <button id="insClose" class="installbar__x" aria-label="ไม่ต้องเดี๋ยวนี้">&times;</button>
+  </div>
+
+  <!-- ============ ขั้นตอนติดตั้งบน iPhone / iPad ============ -->
+  <div id="mdIos" class="modal hide">
+    <div class="modal__box">
+      <div class="modal__head">
+        <h2 class="modal__title">ติดตั้งบน iPhone / iPad</h2>
+        <button id="iosClose" class="modal__x" aria-label="ปิด">&times;</button>
+      </div>
+      <p class="card__hint">ทำครั้งเดียว แล้วจะมีไอคอนอยู่บนหน้าจอโหมแรกเหมือนแอปทั่วไป</p>
+      <ol class="steps">
+        <li>กดปุ่ม <b>แชร์</b> ด้านล่างของ Safari (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น)</li>
+        <li>เลื่อนหาแล้วกด <b>เพิ่มไปที่หน้าจอโหมแรก</b> (Add to Home Screen)</li>
+        <li>กด <b>เพิ่ม</b> มุมขวาบน</li>
+        <li>เสร็จแล้ว จะเห็นไอคอน <b>FA Member</b> บนหน้าจอ กดเปิดใช้ได้เลย</li>
+      </ol>
+      <div class="note note--info">
+        ต้องเปิดด้วย <b>Safari</b> เท่านั้นครับ ถ้าเปิดจาก Chrome หรือในแอป LINE จะไม่มีเมนูนี้
+      </div>
+    </div>
+  </div>
 
   <!-- ============ ดูรูปเต็มจอ ============ -->
   <div id="lb" class="lb hide">
