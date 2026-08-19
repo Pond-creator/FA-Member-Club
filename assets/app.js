@@ -138,23 +138,57 @@
   // ---------------- ดูรูปเต็มจอ ----------------
   var lbAt = -1;
 
+  /**
+   * Drive ไม่ยอมส่งรูปย่อทุกขนาดเสมอไป (ขนาดใหญ่บางขนาดถูกปฏิเสธ)
+   * จึงไล่ลองจากใหญ่ไปเล็ก ถ้าอันไหนโหลดไม่ได้ก็ขยับไปอันถัดไปเอง
+   */
+  // เริ่มที่ w1000 — พอมองออกชัดเจน ไม่ต้องใหญ่กว่านี้ โหลดเร็วและ Drive ยอมส่งง่ายกว่า
+  function bigCandidates(f) {
+    var id = f.file_id;
+    if (!id) return [f.url];
+    return [
+      F.thumbUrl(id, 1000),
+      F.thumbUrl(id, 800),
+      'https://lh3.googleusercontent.com/d/' + id + '=w1000',
+      F.thumbUrl(id, 400),
+      'https://drive.google.com/uc?export=view&id=' + id
+    ];
+  }
+
+  function lbLoad(list, n) {
+    var img = el('lbImg');
+    if (n >= list.length) {                       // ลองครบแล้วยังไม่ได้
+      img.removeAttribute('src');
+      el('lbNote').textContent = 'แสดงรูปตัวอย่างไม่ได้ แต่กดปุ่มบันทึกด้านล่างเพื่อโหลดไฟล์ได้ปกติ';
+      show(el('lbNote'), true);
+      return;
+    }
+    el('lbNote').textContent = 'กำลังโหลดรูป...';
+    show(el('lbNote'), true);
+    img.onload  = function () { show(el('lbNote'), false); };
+    img.onerror = function () { lbLoad(list, n + 1); };
+    img.src = list[n];
+  }
+
   function lbOpen(i) {
     if (i < 0 || i >= FLAT.length) return;
     lbAt = i;
     var it = FLAT[i];
-    el('lbImg').src   = F.thumbUrl(it.f.file_id, 1600) || it.f.url;
     el('lbInfo').textContent = it.event + '  ·  รูปที่ ' + (i + 1) + ' จาก ' + FLAT.length;
-    el('lbDl').href   = F.dlUrl(it.f.file_id, it.f.url);
+    el('lbDl').href = F.dlUrl(it.f.file_id, it.f.url);
     el('lbPrev').disabled = (i === 0);
     el('lbNext').disabled = (i === FLAT.length - 1);
     show(el('lb'), true);
     hideZoom();
     document.body.style.overflow = 'hidden';
+    lbLoad(bigCandidates(it.f), 0);
   }
 
   function lbClose() {
     show(el('lb'), false);
-    el('lbImg').src = '';
+    var img = el('lbImg');
+    img.onload = img.onerror = null;
+    img.removeAttribute('src');
     document.body.style.overflow = '';
   }
 
