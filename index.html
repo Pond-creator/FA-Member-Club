@@ -7,6 +7,10 @@
 <meta name="theme-color" content="#fbf9f5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- ต่อสายรอไว้ล่วงหน้า ลดเวลารอตอนเรียกหลังบ้านและโหลดรูป -->
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://drive.google.com">
+<link rel="preconnect" href="https://lh3.googleusercontent.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -141,6 +145,23 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ ดูรูปเต็มจอ ============ -->
+  <div id="lb" class="lb hide">
+    <div class="lb__stage">
+      <button id="lbX" class="lb__x" aria-label="ปิด">&times;</button>
+      <button id="lbPrev" class="lb__nav lb__nav--prev" aria-label="รูปก่อนหน้า">&lsaquo;</button>
+      <img id="lbImg" class="lb__img" alt="">
+      <button id="lbNext" class="lb__nav lb__nav--next" aria-label="รูปถัดไป">&rsaquo;</button>
+    </div>
+    <div class="lb__bar">
+      <span id="lbInfo" class="lb__info"></span>
+      <a id="lbDl" class="lb__dl" target="_blank" rel="noopener">บันทึกรูปนี้</a>
+    </div>
+  </div>
+
+  <!-- ============ เมาส์ชี้ดูรูปโต (คอมเท่านั้น) ============ -->
+  <div id="zoom" class="hoverzoom hide"><img alt=""></div>
 
   <!-- ============ ป็อบอัพเปลี่ยนรหัสผ่าน ============ -->
   <div id="mdPass" class="modal hide">

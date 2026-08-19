@@ -70,28 +70,57 @@
     });
   }
 
-  // ---------- ม่านโหลด (มีข้อความเปลี่ยนไปเรื่อยๆ ไม่ให้รู้สึกค้าง) ----------
-  var veil = null, veilTimer = null;
+  // ---------- ม่านโหลด : ตัวเลข % + ข้อความเปลี่ยนไปเรื่อยๆ ----------
+  // % เป็นตัวประมาณ (ไต่เข้าใกล้ 92% แล้วรอ) เพราะ Apps Script บอกความคืบหน้าจริงไม่ได้
+  var veil = null, txtTimer = null, pctTimer = null, hideTimer = null, pct = 0;
+
+  function paintPct() {
+    veil.querySelector('.veil__pct').textContent = Math.round(pct) + '%';
+    veil.querySelector('.veil__bar > i').style.width = pct + '%';
+  }
+
   function busy(on, steps) {
     if (on) {
       if (!veil) {
         veil = document.createElement('div');
         veil.className = 'veil';
-        veil.innerHTML = '<div class="spin"></div><div class="veil__txt"></div>';
+        veil.innerHTML = '<div class="spin"></div>' +
+                         '<div class="veil__pct">0%</div>' +
+                         '<div class="veil__bar"><i></i></div>' +
+                         '<div class="veil__txt"></div>';
         document.body.appendChild(veil);
       }
+      clearTimeout(hideTimer);
       veil.classList.remove('hide');
+
       var list = steps || ['กำลังทำงาน...'];
-      var i = 0, txt = veil.querySelector('.veil__txt');
+      var txt = veil.querySelector('.veil__txt');
       txt.textContent = list[0];
-      clearInterval(veilTimer);
-      veilTimer = setInterval(function () {
+
+      // ถ้าเรียกซ้ำระหว่างที่ยังโหลดอยู่ (เช่นอัปโหลดหลายไฟล์) ไม่ต้องรีเซ็ต % กลับไป 0
+      if (veil.dataset.run !== '1') { pct = 0; paintPct(); }
+      veil.dataset.run = '1';
+
+      var i = 0;
+      clearInterval(txtTimer);
+      txtTimer = setInterval(function () {
         i = Math.min(i + 1, list.length - 1);
         txt.textContent = list[i];
-      }, 2500);
+      }, 2200);
+
+      clearInterval(pctTimer);
+      pctTimer = setInterval(function () {
+        pct += (92 - pct) * 0.06;      // ไต่เร็วช่วงแรก แล้วช้าลงเรื่อยๆ
+        if (pct > 91.6) pct = 91.6;
+        paintPct();
+      }, 180);
+
     } else if (veil) {
-      clearInterval(veilTimer);
-      veil.classList.add('hide');
+      clearInterval(txtTimer);
+      clearInterval(pctTimer);
+      veil.dataset.run = '0';
+      pct = 100; paintPct();          // ให้เห็น 100% แวบนึงก่อนปิด
+      hideTimer = setTimeout(function () { veil.classList.add('hide'); }, 220);
     }
   }
 
@@ -135,6 +164,11 @@
     });
   }
 
+  /** รูปย่อจาก Drive ขนาดที่ต้องการ (โหลดตรง ไม่ผ่านหลังบ้าน) */
+  function thumbUrl(fileId, width) {
+    return fileId ? 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w' + (width || 400) : '';
+  }
+
   /** ลิงก์โหลดไฟล์ตรงจาก Drive (ไม่ผ่านหลังบ้าน) */
   function dlUrl(fileId, fallback) {
     return fileId ? 'https://drive.google.com/uc?export=download&id=' + fileId : (fallback || '#');
@@ -153,6 +187,6 @@
     call: call, auth: auth,
     getToken: getToken, setToken: setToken,
     el: el, show: show, esc: esc, busy: busy, say: say,
-    shrink: shrink, dlUrl: dlUrl, viewUrl: viewUrl, initials: initials
+    shrink: shrink, dlUrl: dlUrl, viewUrl: viewUrl, thumbUrl: thumbUrl, initials: initials
   };
 })();

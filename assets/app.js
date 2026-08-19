@@ -79,44 +79,106 @@
   }
 
   // ---------------- ผลงานของฉัน ----------------
+  var FLAT = [];   // รูปทุกใบเรียงต่อกัน ใช้เลื่อนดูซ้าย-ขวาตอนเปิดเต็มจอ
+
+  function paintWork(events) {
+    var box = el('workList');
+    FLAT = [];
+
+    if (!events || !events.length) {
+      box.innerHTML = '<div class="card"><div class="empty">' +
+        'ยังไม่มีผลงานในระบบครับ<br><span class="field-note">' +
+        'เมื่อแอดมินอัปโหลดรูปกิจกรรมให้คุณ จะขึ้นที่หน้านี้</span></div></div>';
+      return;
+    }
+
+    box.innerHTML = events.map(function (ev) {
+      var cells = ev.files.map(function (f) {
+        var idx = FLAT.length;
+        FLAT.push({ f: f, event: ev.event_name });
+        return shotHtml(f, idx);
+      }).join('');
+
+      return '<div class="card event">' +
+        '<div class="event__head">' +
+          '<span class="event__name">' + esc(ev.event_name) + '</span>' +
+          (ev.event_date ? '<span class="event__meta">' + esc(ev.event_date) + '</span>' : '') +
+          '<span class="event__meta">' + ev.files.length + ' ไฟล์</span>' +
+        '</div>' +
+        '<div class="grid">' + cells + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
   function loadWork() {
     var box = el('workList');
     box.innerHTML = '<div class="empty">กำลังโหลดผลงาน...</div>';
-
-    F.auth('myFiles').then(function (r) {
-      if (!r.events.length) {
-        box.innerHTML = '<div class="card"><div class="empty">' +
-          'ยังไม่มีผลงานในระบบครับ<br><span class="field-note">' +
-          'เมื่อแอดมินอัปโหลดรูปกิจกรรมให้คุณ จะขึ้นที่หน้านี้</span></div></div>';
-        return;
-      }
-      box.innerHTML = r.events.map(function (ev) {
-        return '<div class="card event">' +
-          '<div class="event__head">' +
-            '<span class="event__name">' + esc(ev.event_name) + '</span>' +
-            (ev.event_date ? '<span class="event__meta">' + esc(ev.event_date) + '</span>' : '') +
-            '<span class="event__meta">' + ev.files.length + ' ไฟล์</span>' +
-          '</div>' +
-          '<div class="grid">' + ev.files.map(shotHtml).join('') + '</div>' +
-        '</div>';
-      }).join('');
+    return F.auth('myFiles').then(function (r) {
+      paintWork(r.events);
     }).catch(function (err) {
       box.innerHTML = '<div class="card"><div class="note note--err">' + esc(err.message) + '</div></div>';
     });
   }
 
-  function shotHtml(f) {
+  function shotHtml(f, idx) {
     // รูปโหลดตรงจาก Drive ไม่ผ่านหลังบ้าน -> เร็วและไม่กินโควต้า
     var thumb = f.thumb || '';
     return '<div class="shot">' +
       (thumb
-        ? '<img loading="lazy" src="' + esc(thumb) + '" alt="">'
+        ? '<img loading="lazy" src="' + esc(thumb) + '" alt="" data-open="' + idx +
+          '" data-big="' + esc(F.thumbUrl(f.file_id, 900)) + '" style="cursor:zoom-in">'
         : '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=">') +
       '<div class="shot__act">' +
-        '<a href="' + esc(F.viewUrl(f.file_id, f.url)) + '" target="_blank" rel="noopener">ดู</a>' +
+        '<button type="button" data-open="' + idx + '">ดูเต็มจอ</button>' +
         '<a href="' + esc(F.dlUrl(f.file_id, f.url)) + '" target="_blank" rel="noopener">บันทึก</a>' +
       '</div>' +
     '</div>';
+  }
+
+  // ---------------- ดูรูปเต็มจอ ----------------
+  var lbAt = -1;
+
+  function lbOpen(i) {
+    if (i < 0 || i >= FLAT.length) return;
+    lbAt = i;
+    var it = FLAT[i];
+    el('lbImg').src   = F.thumbUrl(it.f.file_id, 1600) || it.f.url;
+    el('lbInfo').textContent = it.event + '  ·  รูปที่ ' + (i + 1) + ' จาก ' + FLAT.length;
+    el('lbDl').href   = F.dlUrl(it.f.file_id, it.f.url);
+    el('lbPrev').disabled = (i === 0);
+    el('lbNext').disabled = (i === FLAT.length - 1);
+    show(el('lb'), true);
+    hideZoom();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function lbClose() {
+    show(el('lb'), false);
+    el('lbImg').src = '';
+    document.body.style.overflow = '';
+  }
+
+  // ---------------- เมาส์ชี้ดูรูปโต (คอมเท่านั้น) ----------------
+  var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+
+  function showZoom(src) {
+    var z = el('zoom');
+    z.querySelector('img').src = src;
+    show(z, true);
+  }
+  function hideZoom() { show(el('zoom'), false); }
+
+  function moveZoom(e) {
+    var z = el('zoom');
+    if (z.classList.contains('hide')) return;
+    var w = z.offsetWidth || 316, h = z.offsetHeight || 316;
+    var x = e.clientX + 18, y = e.clientY - h / 2;
+    // ถ้าล้นขวา ให้ไปอยู่ซ้ายของเมาส์ แล้วบีบให้อยู่ในจอเสมอ (หน้าต่างแคบก็ไม่หลุด)
+    if (x + w > window.innerWidth - 8) x = e.clientX - w - 18;
+    x = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+    y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
+    z.style.left = x + 'px';
+    z.style.top  = y + 'px';
   }
 
   // ---------------- เข้าสู่ระบบ ----------------
@@ -242,6 +304,37 @@
     el('btPickPic').onclick = function () { el('filePic').click(); };
     el('filePic').onchange  = function () { if (this.files[0]) doPic(this.files[0]); };
 
+    // ---- รูปผลงาน: กดดูเต็มจอ / เมาส์ชี้พรีวิว ----
+    var list = el('workList');
+    list.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-open]');
+      if (t) lbOpen(Number(t.dataset.open));
+    });
+    if (canHover) {
+      list.addEventListener('mouseover', function (e) {
+        var img = e.target.closest('img[data-big]');
+        if (img) { showZoom(img.dataset.big); moveZoom(e); }
+      });
+      list.addEventListener('mousemove', moveZoom);
+      list.addEventListener('mouseout', function (e) {
+        if (e.target.closest('img[data-big]')) hideZoom();
+      });
+      window.addEventListener('scroll', hideZoom, { passive: true });
+    }
+
+    el('lbX').onclick    = lbClose;
+    el('lbPrev').onclick = function () { lbOpen(lbAt - 1); };
+    el('lbNext').onclick = function () { lbOpen(lbAt + 1); };
+    el('lb').onclick     = function (e) {
+      if (e.target === el('lb') || e.target.classList.contains('lb__stage')) lbClose();
+    };
+    document.addEventListener('keydown', function (e) {
+      if (el('lb').classList.contains('hide')) return;
+      if (e.key === 'Escape')     lbClose();
+      if (e.key === 'ArrowLeft')  lbOpen(lbAt - 1);
+      if (e.key === 'ArrowRight') lbOpen(lbAt + 1);
+    });
+
     el('btOpenPass').onclick  = function () { openPass(true); };
     el('btClosePass').onclick = function () { openPass(false); };
     el('inCh2').onkeydown     = function (e) { if (e.key === 'Enter') doChange(); };
@@ -274,12 +367,22 @@
     if (!F.getToken()) { screen('scLogin'); return; }
 
     // มี token อยู่แล้ว -> เข้าใช้งานต่อได้เลยไม่ต้อง login ซ้ำ
-    F.busy(true, ['กำลังเข้าสู่ระบบ...']);
-    F.auth('me').then(function (r) {
+    // ใช้ bootstrap เพื่อขอข้อมูลตัวเอง + รายการผลงาน ในรอบเดียว
+    F.busy(true, ['กำลังเข้าสู่ระบบ...', 'กำลังโหลดผลงาน...']);
+    F.auth('bootstrap').catch(function (err) {
+      // ถ้าหลังบ้านยังไม่ได้ deploy รุ่นใหม่ ให้ถอยไปใช้วิธีเดิม 2 รอบ ไม่ให้เว็บพัง
+      if (String(err.message).indexOf('ไม่รู้จักคำสั่ง') < 0) throw err;
+      return F.auth('me').then(function (m) {
+        if (m.member.must !== 'FALSE') return m;
+        return F.auth('myFiles').then(function (w) {
+          return { member: m.member, events: w.events };
+        });
+      });
+    }).then(function (r) {
       me = r.member;
       if (me.must === 'TRUE')       { screen('scSetup'); }
       else if (me.must === 'RESET') { screen('scNewPass'); }
-      else                          { paintMe(); screen('scApp'); loadWork(); }
+      else                          { paintMe(); screen('scApp'); paintWork(r.events || []); }
     }).catch(function () {
       F.setToken('');
       screen('scLogin');
