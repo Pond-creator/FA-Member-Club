@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FA Member Club</title>
+<meta name="theme-color" content="#fbf9f5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__in">
+    <div class="brand">
+      <span class="brand__mark">FA Member Club</span>
+    </div>
+    <div class="spacer"></div>
+    <div id="waWho" class="who hide">
+      <img id="waPic" class="avatar" alt="">
+      <div>
+        <div id="waName" class="who__name"></div>
+        <div id="waMeta" class="who__meta"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ เข้าสู่ระบบ ============ -->
+  <section id="scLogin" class="card hide">
+    <h1 class="card__title">เข้าสู่ระบบ</h1>
+    <p class="card__hint">สมาชิกเดิมที่ยังไม่เคยเปลี่ยนรหัส ใช้ <b>ชื่อ</b> และ <b>นามสกุล</b> เดิมได้เลย</p>
+
+    <label for="inUser">เบอร์โทร หรือ ชื่อ</label>
+    <input id="inUser" type="text" autocomplete="username" inputmode="text" placeholder="0812345678 หรือ ชื่อเดิมของคุณ">
+    <div class="field-note">เปลี่ยนรหัสแล้ว → ใช้เบอร์โทร &nbsp;·&nbsp; ยังไม่เคยเปลี่ยน → ใช้ชื่อเดิม</div>
+
+    <label for="inPass">รหัสผ่าน</label>
+    <input id="inPass" type="password" autocomplete="current-password" placeholder="รหัสผ่าน หรือ นามสกุลเดิม">
+
+    <div class="btn-row">
+      <button id="btLogin" class="btn btn--block">เข้าสู่ระบบ</button>
+    </div>
+    <div id="msLogin" class="note hide"></div>
+
+    <hr class="hr">
+    <p class="field-note">เข้าไม่ได้ / จำรหัสไม่ได้ → ติดต่อแอดมินเพื่อรีเซ็ตรหัสให้ครับ</p>
+  </section>
+
+  <!-- ============ ตั้งค่าครั้งแรก ============ -->
+  <section id="scSetup" class="card hide">
+    <h1 class="card__title">ตั้งค่าบัญชีครั้งแรก</h1>
+    <p class="card__hint">
+      เพื่อไม่ให้ชื่อซ้ำกัน ระบบใหม่ใช้ <b>เบอร์โทร</b> เป็นชื่อผู้ใช้ ทำครั้งเดียวจบครับ
+    </p>
+
+    <label for="inPhone">เบอร์โทรศัพท์ (ใช้เข้าระบบครั้งต่อไป)</label>
+    <input id="inPhone" type="tel" inputmode="numeric" maxlength="13" placeholder="0812345678">
+    <div class="field-note">เบอร์นี้จะเป็นชื่อผู้ใช้ของคุณ ห้ามซ้ำกับสมาชิกคนอื่น</div>
+
+    <label for="inNew1">รหัสผ่านใหม่</label>
+    <input id="inNew1" type="password" autocomplete="new-password" placeholder="เช่น fa123456">
+    <ul id="ruleList" class="rules">
+      <li data-rule="len">ยาว 8 ตัวขึ้นไป</li>
+      <li data-rule="abc">มีตัวอักษรอังกฤษ</li>
+      <li data-rule="num">มีตัวเลข</li>
+      <li data-rule="sp">ไม่มีเว้นวรรค และใช้แค่อังกฤษกับตัวเลข</li>
+    </ul>
+
+    <label for="inNew2">ยืนยันรหัสผ่านใหม่</label>
+    <input id="inNew2" type="password" autocomplete="new-password" placeholder="พิมพ์รหัสเดิมอีกครั้ง">
+
+    <div class="btn-row">
+      <button id="btSetup" class="btn btn--block">บันทึกและเข้าใช้งาน</button>
+    </div>
+    <div id="msSetup" class="note hide"></div>
+  </section>
+
+  <!-- ============ ตั้งรหัสใหม่ (แอดมินรีเซ็ตมา) ============ -->
+  <section id="scNewPass" class="card hide">
+    <h1 class="card__title">ตั้งรหัสผ่านใหม่</h1>
+    <p class="card__hint">แอดมินรีเซ็ตรหัสให้คุณ กรุณาตั้งรหัสใหม่ก่อนใช้งาน</p>
+
+    <label for="inRs1">รหัสผ่านใหม่</label>
+    <input id="inRs1" type="password" autocomplete="new-password">
+    <div class="field-note">ยาว 8 ตัวขึ้นไป มีทั้งตัวอักษรอังกฤษและตัวเลข ไม่มีเว้นวรรค</div>
+
+    <label for="inRs2">ยืนยันรหัสผ่านใหม่</label>
+    <input id="inRs2" type="password" autocomplete="new-password">
+
+    <div class="btn-row">
+      <button id="btNewPass" class="btn btn--block">บันทึกรหัสใหม่</button>
+    </div>
+    <div id="msNewPass" class="note hide"></div>
+  </section>
+
+  <!-- ============ หน้าหลักสมาชิก ============ -->
+  <section id="scApp" class="hide">
+
+    <div class="tabs">
+      <button class="tab is-on" data-pane="paneWork">ผลงานของฉัน</button>
+      <button class="tab" data-pane="paneMe">โปรไฟล์</button>
+    </div>
+
+    <!-- ผลงาน -->
+    <div id="paneWork">
+      <div class="card card--tight" style="margin-top:16px">
+        <p class="field-note" style="margin:0">
+          รูปและไฟล์ที่แอดมินเตรียมไว้ให้คุณ — กด <b>บันทึก</b> เพื่อโหลดเก็บไว้ในเครื่อง
+        </p>
+      </div>
+      <div id="workList"></div>
+    </div>
+
+    <!-- โปรไฟล์ -->
+    <div id="paneMe" class="hide">
+      <div class="card" style="text-align:center">
+        <img id="mePic" class="avatar avatar--lg" alt="" style="margin:0 auto">
+        <h2 id="meName" class="card__title" style="margin-top:14px"></h2>
+        <div id="mePhone" class="who__meta"></div>
+        <div style="margin-top:10px"><span id="meRole" class="badge"></span></div>
+
+        <div class="btn-row" style="justify-content:center">
+          <button id="btPickPic" class="btn btn--ghost btn--sm">เปลี่ยนรูปโปรไฟล์</button>
+          <button id="btOpenPass" class="btn btn--ghost btn--sm">เปลี่ยนรหัสผ่าน</button>
+        </div>
+        <input id="filePic" type="file" accept="image/jpeg,image/png" class="hide">
+        <div id="msPic" class="note hide"></div>
+        <div id="msChange" class="note hide"></div>
+      </div>
+
+      <div class="card card--tight">
+        <div class="btn-row" style="margin:0">
+          <a id="lnAdmin" class="btn btn--plain btn--sm hide" href="admin.html">ไปหน้าแอดมิน</a>
+          <button id="btOut" class="btn btn--danger btn--sm">ออกจากระบบ</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ป็อบอัพเปลี่ยนรหัสผ่าน ============ -->
+  <div id="mdPass" class="modal hide">
+    <div class="modal__box">
+      <div class="modal__head">
+        <h2 class="modal__title">เปลี่ยนรหัสผ่าน</h2>
+        <button id="btClosePass" class="modal__x" aria-label="ปิด">&times;</button>
+      </div>
+      <p class="card__hint">ยาว 8 ตัวขึ้นไป มีทั้งตัวอักษรอังกฤษและตัวเลข ไม่มีเว้นวรรค</p>
+
+      <label for="inOld">รหัสผ่านเดิม</label>
+      <input id="inOld" type="password" autocomplete="current-password">
+
+      <label for="inCh1">รหัสผ่านใหม่</label>
+      <input id="inCh1" type="password" autocomplete="new-password">
+
+      <label for="inCh2">ยืนยันรหัสผ่านใหม่</label>
+      <input id="inCh2" type="password" autocomplete="new-password">
+
+      <div class="btn-row">
+        <button id="btChange" class="btn btn--block">บันทึกรหัสใหม่</button>
+      </div>
+      <div id="msPass" class="note hide"></div>
+    </div>
+  </div>
+
+</main>
+
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

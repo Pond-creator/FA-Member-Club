@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>จัดการระบบ — FA Member Club</title>
+<meta name="theme-color" content="#fbf9f5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar topbar--admin">
+  <div class="topbar__in">
+    <div class="brand">
+      <span class="brand__mark">FA Member Club</span>
+      <span class="brand__sub">จัดการระบบ</span>
+    </div>
+    <div class="spacer"></div>
+    <a class="btn btn--plain btn--sm" href="index.html">หน้าสมาชิก</a>
+  </div>
+</header>
+
+<main class="wrap wrap--admin">
+
+  <!-- ============ ต้องเป็นแอดมิน ============ -->
+  <section id="scGate" class="card hide">
+    <h1 class="card__title">เข้าสู่ระบบแอดมิน</h1>
+    <p class="card__hint">หน้านี้สำหรับผู้ที่มีสิทธิ์แอดมินเท่านั้น</p>
+
+    <label for="inUser">เบอร์โทร หรือ ชื่อ</label>
+    <input id="inUser" type="text" autocomplete="username">
+
+    <label for="inPass">รหัสผ่าน</label>
+    <input id="inPass" type="password" autocomplete="current-password">
+
+    <div class="btn-row">
+      <button id="btLogin" class="btn btn--block">เข้าสู่ระบบ</button>
+    </div>
+    <div id="msGate" class="note hide"></div>
+  </section>
+
+  <!-- ============ หน้าจัดการ ============ -->
+  <section id="scAdmin" class="hide">
+
+    <div class="tabs">
+      <button class="tab is-on" data-pane="paneEv">กิจกรรม</button>
+      <button class="tab" data-pane="paneUp">อัปโหลดให้สมาชิก</button>
+      <button class="tab" data-pane="paneMem">สมาชิก</button>
+      <button class="tab" data-pane="paneStat">ภาพรวม</button>
+    </div>
+
+    <!-- ---------- กิจกรรม ---------- -->
+    <div id="paneEv">
+      <div class="card">
+        <h2 class="card__title">สร้างกิจกรรมใหม่</h2>
+        <p class="card__hint">ระบบจะสร้างโฟลเดอร์ใน Drive ให้เองอัตโนมัติ</p>
+
+        <label for="inEvName">ชื่อกิจกรรม</label>
+        <input id="inEvName" type="text" placeholder="เช่น ประกวดวาดรูป ปี 2569">
+
+        <label for="inEvDate">วันที่จัด (ไม่ใส่ก็ได้)</label>
+        <input id="inEvDate" type="text" placeholder="เช่น 25/12/2569">
+
+        <label for="inEvDesc">รายละเอียด (ไม่ใส่ก็ได้)</label>
+        <textarea id="inEvDesc" placeholder="อธิบายสั้นๆ ให้สมาชิกเข้าใจ"></textarea>
+
+        <div class="btn-row">
+          <button id="btNewEv" class="btn">สร้างกิจกรรม</button>
+        </div>
+        <div id="msEv" class="note hide"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">กิจกรรมทั้งหมด</h2>
+        <p class="card__hint">กดปิดกิจกรรมได้ถ้าไม่อยากให้แสดงในระบบ</p>
+        <div id="evList"></div>
+      </div>
+    </div>
+
+    <!-- ---------- อัปโหลด ---------- -->
+    <div id="paneUp" class="hide">
+      <div class="card">
+        <h2 class="card__title">อัปโหลดผลงานให้สมาชิก</h2>
+        <p class="card__hint">เลือกกิจกรรม → ค้นหาสมาชิก → เลือกรูป ระบบตั้งชื่อไฟล์ให้เองเป็น เบอร์โทร_ลำดับ</p>
+
+        <label for="selEv">1. กิจกรรม</label>
+        <select id="selEv"></select>
+
+        <label for="inFind">2. ค้นหาสมาชิก (ชื่อ หรือ เบอร์โทร)</label>
+        <input id="inFind" type="text" placeholder="พิมพ์ชื่อหรือเบอร์ แล้วกดค้นหา">
+        <div class="btn-row" style="margin-top:10px">
+          <button id="btFind" class="btn btn--ghost btn--sm">ค้นหา</button>
+        </div>
+        <div id="findList"></div>
+
+        <div id="upBox" class="hide">
+          <hr class="hr">
+          <div class="note note--info" id="upWho"></div>
+          <label for="fileUp" style="margin-top:14px">3. เลือกรูป (เลือกหลายไฟล์พร้อมกันได้)</label>
+          <input id="fileUp" type="file" accept="image/jpeg,image/png" multiple>
+          <div class="btn-row">
+            <button id="btUp" class="btn">อัปโหลด</button>
+            <button id="btUpClear" class="btn btn--plain">เลือกคนใหม่</button>
+          </div>
+          <div id="msUp" class="note hide"></div>
+          <div id="upDone" class="grid" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- สมาชิก ---------- -->
+    <div id="paneMem" class="hide">
+      <div class="card">
+        <h2 class="card__title">สมาชิก</h2>
+        <p class="card__hint">ค้นหาเพื่อดูสถานะ หรือรีเซ็ตรหัสให้คนที่เข้าระบบไม่ได้</p>
+
+        <label for="inMemQ">ค้นหา (ชื่อ / เบอร์ / รหัสสมาชิก)</label>
+        <input id="inMemQ" type="text" placeholder="เว้นว่างเพื่อดู 40 คนแรก">
+        <div class="btn-row" style="margin-top:10px">
+          <button id="btMemQ" class="btn btn--ghost btn--sm">ค้นหา</button>
+        </div>
+        <div id="msMem" class="note hide"></div>
+        <div id="memList"></div>
+      </div>
+    </div>
+
+    <!-- ---------- ภาพรวม ---------- -->
+    <div id="paneStat" class="hide">
+      <div class="card">
+        <h2 class="card__title">ภาพรวมระบบ</h2>
+        <p class="card__hint">อัปเดตทุกครั้งที่เปิดแท็บนี้</p>
+        <div id="statBox" class="stats"></div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script src="assets/api.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>
