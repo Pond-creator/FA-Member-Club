@@ -386,3 +386,31 @@ textarea { min-height: 72px; resize: vertical; }
   .card { padding: 26px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 }
+
+/* ---------- รหัสชั่วคราวที่ออกให้สมาชิกเก่า ---------- */
+.row--head {
+  background: var(--gold-bg);
+  font-size: 12.5px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.pw {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-soft);
+  border-radius: 6px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+/* รายชื่อยาว 400 กว่าคน -> จำกัดความสูงแล้วเลื่อนในกล่อง ไม่ให้หน้ายาวเกินจนหาปุ่มไม่เจอ */
+#tempList {
+  max-height: 55vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 12px;
+}

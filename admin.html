@@ -155,6 +155,38 @@
         <div id="msMem" class="note hide"></div>
         <div id="memList"></div>
       </div>
+
+      <div class="card">
+        <h2 class="card__title">ออกรหัสชั่วคราวให้สมาชิกเก่า</h2>
+        <p class="card__hint">
+          ทำครั้งเดียวก่อนแจกลิงก์ให้สมาชิก — สมาชิกที่ย้ายมาจากระบบเดิมและยังไม่เคยเข้าใช้
+          ตอนนี้ใช้ <strong>นามสกุลตัวเอง</strong> เป็นรหัส คนที่รู้จักเขาเข้าได้เลยโดยไม่ต้องเดา
+          กดปุ่มนี้แล้วระบบจะสุ่มรหัส 8 หลักให้ทุกคน เอาไปแจกส่วนตัว
+        </p>
+
+        <div id="tempStat" class="note note--info">กำลังตรวจ...</div>
+
+        <div class="btn-row" style="margin-top:12px">
+          <button id="btTempCheck" class="btn btn--ghost btn--sm">ตรวจอีกครั้ง</button>
+          <button id="btTempIssue" class="btn">ออกรหัสให้ทุกคน</button>
+        </div>
+
+        <div id="msTemp" class="note hide"></div>
+
+        <div id="tempResult" class="hide" style="margin-top:14px">
+          <div class="note note--err">
+            <strong>⚠️ รหัสชุดนี้แสดงครั้งเดียว</strong><br>
+            ระบบเก็บรหัสไว้แบบเข้ารหัส เปิดดูย้อนหลังไม่ได้ ถ้าปิดหน้านี้ไปจะต้องกดออกรหัสใหม่
+            (ของเก่าจะใช้ไม่ได้ทันที) — <strong>กดบันทึกไฟล์เก็บไว้ก่อน</strong>
+            แจกเสร็จแล้วลบไฟล์ทิ้ง อย่าส่งต่อในกลุ่ม
+          </div>
+          <div class="btn-row" style="margin-top:10px">
+            <button id="btTempSave" class="btn btn--sm">บันทึกเป็นไฟล์</button>
+            <button id="btTempCopy" class="btn btn--ghost btn--sm">คัดลอกทั้งหมด</button>
+          </div>
+          <div id="tempList" style="margin-top:12px"></div>
+        </div>
+      </div>
     </div>
 
     <!-- ---------- ภาพรวม ---------- -->

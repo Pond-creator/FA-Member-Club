@@ -5,6 +5,7 @@
 
   var events = [];
   var picked = null;   // สมาชิกที่เลือกไว้เพื่ออัปโหลด
+  var tempList = [];   // รหัสชั่วคราวที่เพิ่งออก — อยู่ในหน้าเว็บเท่านั้น ปิดหน้าแล้วหาย
 
   // ---------------- เข้าสู่ระบบ ----------------
   function doLogin() {
@@ -167,6 +168,112 @@
     });
   }
 
+  // ---------------- รหัสชั่วคราวให้สมาชิกเก่า ----------------
+
+  /** ถ้าหลังบ้านยังไม่ได้ deploy รุ่นใหม่ จะตอบว่าไม่รู้จักคำสั่ง — บอกให้ชัดว่าต้องทำอะไร */
+  function notDeployed(err) {
+    return /ไม่รู้จักคำสั่ง|Unknown action|adminIssueTemp/i.test(err.message || '');
+  }
+  var NEED_DEPLOY = 'หลังบ้านยังไม่ได้อัปเดต — วาง Code.gs ใหม่ใน Apps Script แล้ว deploy เวอร์ชันใหม่ก่อนนะครับ';
+
+  function loadTempStatus() {
+    var box = el('tempStat');
+    box.className = 'note note--info';
+    box.textContent = 'กำลังตรวจ...';
+
+    F.auth('adminIssueTemp', { preview: true }).then(function (r) {
+      if (!r.pending) {
+        box.className = 'note note--ok';
+        box.textContent = '✅ เรียบร้อย — สมาชิกทุกคนตั้งรหัสของตัวเองแล้ว ไม่มีใครใช้นามสกุลเป็นรหัส';
+        el('btTempIssue').disabled = true;
+      } else {
+        box.className = 'note note--err';
+        box.textContent = '⚠️ มีสมาชิก ' + r.pending + ' คน (จากทั้งหมด ' + r.total + ' คน) ' +
+                          'ที่ยังใช้นามสกุลตัวเองเป็นรหัสผ่าน — ยังไม่ควรแจกลิงก์จนกว่าจะออกรหัสชั่วคราวให้';
+        el('btTempIssue').disabled = false;
+      }
+    }).catch(function (err) {
+      box.className = 'note note--err';
+      box.textContent = notDeployed(err) ? NEED_DEPLOY : err.message;
+      el('btTempIssue').disabled = true;
+    });
+  }
+
+  function doTempIssue() {
+    if (!window.confirm(
+      'ระบบจะสุ่มรหัสใหม่ให้สมาชิกที่ยังไม่เคยเข้าใช้ทุกคน\n\n' +
+      '• รหัสเดิม (นามสกุล) จะใช้ไม่ได้ทันที\n' +
+      '• รหัสชุดใหม่แสดงครั้งเดียว ต้องบันทึกไฟล์เก็บไว้\n' +
+      '• ถ้าเคยออกรหัสไปแล้วและแจกไปบ้างแล้ว กดซ้ำจะทำให้รหัสที่แจกไปใช้ไม่ได้\n\n' +
+      'ยืนยันหรือไม่?')) return;
+
+    say(el('msTemp'), '', '');
+    F.busy(true, ['กำลังออกรหัสให้สมาชิก...']);
+
+    F.auth('adminIssueTemp', {}).then(function (r) {
+      tempList = r.list || [];
+      if (!tempList.length) { say(el('msTemp'), 'ok', r.msg); show(el('tempResult'), false); return; }
+
+      el('tempList').innerHTML =
+        '<div class="row row--head"><div class="row__main"><strong>ชื่อ</strong></div>' +
+        '<strong>รหัสชั่วคราว</strong></div>' +
+        tempList.map(function (m) {
+          return '<div class="row">' +
+            '<div class="row__main">' +
+              '<div class="row__title">' + esc(m.name) + '</div>' +
+              '<div class="row__sub">' + esc(m.member_id) + ' · เข้าด้วย ' + esc(m.login_with) + '</div>' +
+            '</div>' +
+            '<code class="pw">' + esc(m.temp_password) + '</code>' +
+          '</div>';
+        }).join('');
+
+      show(el('tempResult'), true);
+      say(el('msTemp'), 'ok', r.msg);
+      loadTempStatus();
+    }).catch(function (err) {
+      say(el('msTemp'), 'err', notDeployed(err) ? NEED_DEPLOY : err.message);
+    }).then(function () { F.busy(false); });
+  }
+
+  function tempAsText() {
+    return 'ชื่อ\tรหัสสมาชิก\tเข้าระบบด้วย\tรหัสชั่วคราว\n' +
+      tempList.map(function (m) {
+        return m.name + '\t' + m.member_id + '\t' + m.login_with + '\t' + m.temp_password;
+      }).join('\n');
+  }
+
+  function doTempSave() {
+    if (!tempList.length) return;
+    var d = new Date();
+    var stamp = d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2);
+    // ﻿ = BOM ให้ Excel อ่านภาษาไทยไม่เป็นตัวต่างดาว
+    var blob = new Blob(['﻿' + tempAsText()], { type: 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'รหัสชั่วคราว-' + stamp + '.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    say(el('msTemp'), 'ok', 'บันทึกไฟล์แล้ว — แจกเสร็จอย่าลืมลบไฟล์ทิ้งนะครับ');
+  }
+
+  function doTempCopy() {
+    if (!tempList.length) return;
+    var txt = tempAsText();
+    var done = function () { say(el('msTemp'), 'ok', 'คัดลอกแล้ว ' + tempList.length + ' รายการ'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, fallback);
+    } else { fallback(); }
+
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); }
+      catch (e) { say(el('msTemp'), 'err', 'คัดลอกอัตโนมัติไม่ได้ ใช้ปุ่มบันทึกเป็นไฟล์แทนนะครับ'); }
+      document.body.removeChild(ta);
+    }
+  }
+
   // ---------------- อัปโหลดทีละไฟล์ ----------------
   function doUpload() {
     var files = Array.prototype.slice.call(el('fileUp').files || []);
@@ -320,6 +427,10 @@
     el('btUp').onclick      = doUpload;
     el('btUpClear').onclick = clearPick;
     el('btMemQ').onclick    = doMemQuery;
+    el('btTempCheck').onclick = loadTempStatus;
+    el('btTempIssue').onclick = doTempIssue;
+    el('btTempSave').onclick  = doTempSave;
+    el('btTempCopy').onclick  = doTempCopy;
     el('inMemQ').onkeydown  = function (e) { if (e.key === 'Enter') doMemQuery(); };
 
     el('btAddMem').onclick    = doAddMember;
@@ -334,7 +445,7 @@
           show(el(p), p === t.dataset.pane);
         });
         if (t.dataset.pane === 'paneStat') loadStats();
-        if (t.dataset.pane === 'paneMem' && !el('memList').innerHTML) doMemQuery();
+        if (t.dataset.pane === 'paneMem' && !el('memList').innerHTML) { doMemQuery(); loadTempStatus(); }
         window.scrollTo(0, 0);
       };
     });
