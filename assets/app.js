@@ -18,7 +18,7 @@
     if (/\s/.test(p))              return 'รหัสผ่านห้ามมีเว้นวรรค';
     if (p.length < 8)              return 'รหัสผ่านต้องยาว 8 ตัวขึ้นไป';
     if (!/^[A-Za-z0-9]+$/.test(p)) return 'รหัสผ่านใช้ได้แค่ตัวอักษรอังกฤษและตัวเลข';
-    if (!/[A-Za-z]/.test(p))       return 'ต้องมีตัวอักษรอังกฤษอย่างน้อย 1 ตัว';
+    // ไม่บังคับตัวอักษรอังกฤษ -> ใส่ตัวเลขล้วนได้ (ต้องตรงกับ checkPassRule_ ใน Code.gs)
     if (!/[0-9]/.test(p))          return 'ต้องมีตัวเลขอย่างน้อย 1 ตัว';
     return '';
   }
@@ -27,7 +27,6 @@
     var p = el('inNew1').value;
     var pass = {
       len: p.length >= 8,
-      abc: /[A-Za-z]/.test(p),
       num: /[0-9]/.test(p),
       sp:  p.length > 0 && /^[A-Za-z0-9]+$/.test(p)
     };

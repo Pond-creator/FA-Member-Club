@@ -77,11 +77,10 @@
     <div class="field-note">เบอร์นี้จะเป็นชื่อผู้ใช้ของคุณ ห้ามซ้ำกับสมาชิกคนอื่น</div>
 
     <label for="inNew1">รหัสผ่านใหม่</label>
-    <input id="inNew1" type="password" autocomplete="new-password" placeholder="เช่น fa123456">
+    <input id="inNew1" type="password" autocomplete="new-password" placeholder="เช่น 25160812 หรือ fa123456">
     <ul id="ruleList" class="rules">
       <li data-rule="len">ยาว 8 ตัวขึ้นไป</li>
-      <li data-rule="abc">มีตัวอักษรอังกฤษ</li>
-      <li data-rule="num">มีตัวเลข</li>
+      <li data-rule="num">มีตัวเลข (ใส่ตัวเลขล้วนก็ได้)</li>
       <li data-rule="sp">ไม่มีเว้นวรรค และใช้แค่อังกฤษกับตัวเลข</li>
     </ul>
 
@@ -101,7 +100,7 @@
 
     <label for="inRs1">รหัสผ่านใหม่</label>
     <input id="inRs1" type="password" autocomplete="new-password">
-    <div class="field-note">ยาว 8 ตัวขึ้นไป มีทั้งตัวอักษรอังกฤษและตัวเลข ไม่มีเว้นวรรค</div>
+    <div class="field-note">ยาว 8 ตัวขึ้นไป ต้องมีตัวเลข (ใส่ตัวเลขล้วนก็ได้) ไม่มีเว้นวรรค</div>
 
     <label for="inRs2">ยืนยันรหัสผ่านใหม่</label>
     <input id="inRs2" type="password" autocomplete="new-password">
@@ -212,7 +211,7 @@
         <h2 class="modal__title">เปลี่ยนรหัสผ่าน</h2>
         <button id="btClosePass" class="modal__x" aria-label="ปิด">&times;</button>
       </div>
-      <p class="card__hint">ยาว 8 ตัวขึ้นไป มีทั้งตัวอักษรอังกฤษและตัวเลข ไม่มีเว้นวรรค</p>
+      <p class="card__hint">ยาว 8 ตัวขึ้นไป ต้องมีตัวเลข (ใส่ตัวเลขล้วนก็ได้) ไม่มีเว้นวรรค</p>
 
       <label for="inOld">รหัสผ่านเดิม</label>
       <input id="inOld" type="password" autocomplete="current-password">
