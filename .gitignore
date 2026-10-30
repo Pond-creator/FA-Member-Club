@@ -21,6 +21,8 @@ appsscript.json
 migrate-output/
 scripts/
 gas/
+tools-local/
+รีเซ็ตรหัสผ่าน.html
 
 # เอกสารภายใน
 PROJECT_NOTES.md
