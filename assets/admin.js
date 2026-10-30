@@ -121,8 +121,21 @@
   }
 
   // ---------------- ค้นหาสมาชิกเพื่ออัปโหลด ----------------
+
+  /** ล้างคนที่เลือกไว้ให้หมด — ใช้ทั้งตอนค้นหาใหม่ และตอนกดปุ่ม "เลือกคนใหม่"
+   *  สำคัญ: ถ้าไม่ล้าง คนที่เลือกไว้เดิมจะค้างอยู่ตอนค้นหาคนใหม่ -> อัปรูปผิดคนได้ */
+  function clearPick() {
+    picked = null;
+    show(el('upBox'), false);
+    el('upWho').textContent = '';
+    el('fileUp').value = '';
+    el('upDone').innerHTML = '';
+    say(el('msUp'), '', '');
+  }
+
   function doFind() {
     var q = el('inFind').value.trim();
+    clearPick();                       // ค้นหาใหม่ = เริ่มเลือกคนใหม่เสมอ
     el('findList').innerHTML = '<div class="empty">กำลังค้นหา...</div>';
 
     F.auth('adminMembers', { q: q, limit: 40 }).then(function (r) {
@@ -305,7 +318,7 @@
     el('btFind').onclick    = doFind;
     el('inFind').onkeydown  = function (e) { if (e.key === 'Enter') doFind(); };
     el('btUp').onclick      = doUpload;
-    el('btUpClear').onclick = function () { picked = null; show(el('upBox'), false); };
+    el('btUpClear').onclick = clearPick;
     el('btMemQ').onclick    = doMemQuery;
     el('inMemQ').onkeydown  = function (e) { if (e.key === 'Enter') doMemQuery(); };
 
