@@ -6,7 +6,7 @@
   var me = null;
 
   // ---------------- สลับหน้าจอ ----------------
-  var SCREENS = ['scLogin', 'scSetup', 'scNewPass', 'scApp'];
+  var SCREENS = ['scLogin', 'scSelf', 'scApp'];
   function screen(id) {
     SCREENS.forEach(function (s) { show(el(s), s === id); });
     show(el('waWho'), id === 'scApp');
@@ -216,7 +216,7 @@
 
   // ---------------- เข้าสู่ระบบ ----------------
   function doLogin() {
-    var user = el('inUser').value.trim();
+    var user = el('inUser').value.replace(/[^0-9]/g, '');
     var pass = el('inPass').value;
     say(el('msLogin'), '', '');
     if (!user || !pass) { say(el('msLogin'), 'err', 'กรอกให้ครบทั้ง 2 ช่องก่อนนะครับ'); return; }
@@ -226,50 +226,44 @@
       F.setToken(r.token);
       me = r.member;
       el('inPass').value = '';
-      if (r.needSetup)        { screen('scSetup'); }
-      else if (r.needNewPass) { screen('scNewPass'); }
-      else                    { paintMe(); screen('scApp'); loadWork(); }
+      paintMe(); screen('scApp'); loadWork();
     }).catch(function (err) {
       say(el('msLogin'), 'err', err.message);
     }).then(function () { F.busy(false); });
   }
 
-  // ---------------- ตั้งค่าครั้งแรก ----------------
-  function doSetup() {
-    var phone = el('inPhone').value.replace(/[^0-9]/g, '');
-    var p1 = el('inNew1').value, p2 = el('inNew2').value;
-    say(el('msSetup'), '', '');
-
-    if (!/^0[0-9]{9}$/.test(phone)) { say(el('msSetup'), 'err', 'เบอร์โทรต้องเป็นเลข 10 หลัก เริ่มด้วย 0'); return; }
-    var bad = passProblem(p1);
-    if (bad)        { say(el('msSetup'), 'err', bad); return; }
-    if (p1 !== p2)  { say(el('msSetup'), 'err', 'รหัสผ่าน 2 ช่องไม่เหมือนกัน'); return; }
-
-    F.busy(true, ['กำลังบันทึก...']);
-    F.auth('firstSetup', { phone: phone, password: p1 }).then(function (r) {
-      me = r.member;
-      paintMe(); screen('scApp'); loadWork();
-    }).catch(function (err) {
-      say(el('msSetup'), 'err', err.message);
-    }).then(function () { F.busy(false); });
+  // ---------------- ตั้งรหัสผ่านเอง (ไม่ต้อง login ก่อน) ----------------
+  // ใช้ได้เฉพาะบัญชีที่แอดมินเปิดสิทธิ์ไว้ ตั้งเสร็จระบบปิดสิทธิ์ทันที
+  function goSelf(on) {
+    screen(on ? 'scSelf' : 'scLogin');
+    if (on) {
+      ['inSelfPhone', 'inNew1', 'inNew2'].forEach(function (i) { el(i).value = ''; });
+      say(el('msSelf'), '', '');
+      paintRules();
+      el('inSelfPhone').focus();
+    } else {
+      say(el('msLogin'), '', '');
+    }
   }
 
-  // ---------------- ตั้งรหัสใหม่หลังถูกรีเซ็ต ----------------
-  function doNewPass() {
-    var p1 = el('inRs1').value, p2 = el('inRs2').value;
-    say(el('msNewPass'), '', '');
+  function doSelfSetup() {
+    var phone = el('inSelfPhone').value.replace(/[^0-9]/g, '');
+    var p1 = el('inNew1').value, p2 = el('inNew2').value;
+    say(el('msSelf'), '', '');
+
+    if (!/^0[0-9]{9}$/.test(phone)) { say(el('msSelf'), 'err', 'เบอร์โทรต้องเป็นเลข 10 หลัก เริ่มด้วย 0'); return; }
     var bad = passProblem(p1);
-    if (bad)       { say(el('msNewPass'), 'err', bad); return; }
-    if (p1 !== p2) { say(el('msNewPass'), 'err', 'รหัสผ่าน 2 ช่องไม่เหมือนกัน'); return; }
+    if (bad)       { say(el('msSelf'), 'err', bad); return; }
+    if (p1 !== p2) { say(el('msSelf'), 'err', 'รหัสผ่าน 2 ช่องไม่เหมือนกัน'); return; }
 
     F.busy(true, ['กำลังบันทึก...']);
-    F.auth('changePassword', { newPassword: p1 }).then(function () {
-      return F.auth('me');
-    }).then(function (r) {
+    F.call('selfSetup', { phone: phone, password: p1 }).then(function (r) {
+      F.setToken(r.token);
       me = r.member;
+      ['inSelfPhone', 'inNew1', 'inNew2'].forEach(function (i) { el(i).value = ''; });
       paintMe(); screen('scApp'); loadWork();
     }).catch(function (err) {
-      say(el('msNewPass'), 'err', err.message);
+      say(el('msSelf'), 'err', err.message);
     }).then(function () { F.busy(false); });
   }
 
@@ -321,18 +315,22 @@
 
   // ---------------- ผูกปุ่ม ----------------
   function bind() {
-    el('btLogin').onclick   = doLogin;
-    el('btSetup').onclick   = doSetup;
-    el('btNewPass').onclick = doNewPass;
-    el('btChange').onclick  = doChange;
+    el('btLogin').onclick     = doLogin;
+    el('btSelf').onclick      = doSelfSetup;
+    el('btGoSelf').onclick    = function () { goSelf(true); };
+    el('btBackLogin').onclick = function () { goSelf(false); };
+    el('btChange').onclick    = doChange;
 
     el('inPass').onkeydown = function (e) { if (e.key === 'Enter') doLogin(); };
     el('inUser').onkeydown = function (e) { if (e.key === 'Enter') el('inPass').focus(); };
     el('inNew1').oninput   = paintRules;
+    el('inNew2').onkeydown = function (e) { if (e.key === 'Enter') doSelfSetup(); };
 
-    el('inPhone').oninput = function () {
-      this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
-    };
+    ['inUser', 'inSelfPhone'].forEach(function (id) {
+      el(id).oninput = function () {
+        this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+      };
+    });
 
     el('btPickPic').onclick = function () { el('filePic').click(); };
     el('filePic').onchange  = function () { if (this.files[0]) doPic(this.files[0]); };
@@ -483,9 +481,9 @@
       });
     }).then(function (r) {
       me = r.member;
-      if (me.must === 'TRUE')       { screen('scSetup'); }
-      else if (me.must === 'RESET') { screen('scNewPass'); }
-      else                          { paintMe(); screen('scApp'); paintWork(r.events || []); }
+      // must = TRUE/RESET แปลว่าแอดมินเปิดสิทธิ์ให้ตั้งรหัสใหม่ -> token เดิมใช้ต่อไม่ได้
+      if (me.must === 'TRUE' || me.must === 'RESET') { F.setToken(''); goSelf(true); }
+      else { paintMe(); screen('scApp'); paintWork(r.events || []); }
     }).catch(function () {
       F.setToken('');
       screen('scLogin');

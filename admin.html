@@ -123,7 +123,7 @@
     <div id="paneMem" class="hide">
       <div class="card">
         <h2 class="card__title">เพิ่มสมาชิกใหม่</h2>
-        <p class="card__hint">ระบบจะออกรหัสชั่วคราวให้ เอาไปบอกเจ้าตัว แล้วเค้าตั้งรหัสเองตอนเข้าระบบครั้งแรก</p>
+        <p class="card__hint">ใส่ชื่อกับเบอร์โทรให้ก็พอ — เจ้าตัวไปตั้งรหัสเองที่หน้าเข้าสู่ระบบ (เราไม่ต้องรู้รหัสของเค้า)</p>
 
         <label for="inNewName">ชื่อ-นามสกุล</label>
         <input id="inNewName" type="text" placeholder="เช่น สมหญิง ใจดี">
@@ -145,7 +145,7 @@
 
       <div class="card">
         <h2 class="card__title">สมาชิก</h2>
-        <p class="card__hint">ค้นหาเพื่อดูสถานะ หรือรีเซ็ตรหัสให้คนที่เข้าระบบไม่ได้</p>
+        <p class="card__hint">สมาชิกเก่าที่ยังไม่มีเบอร์ → กด "ใส่เบอร์" แล้วเค้าไปตั้งรหัสเองได้เลย · ลืมรหัส → กด "เปิดให้ตั้งรหัสใหม่"</p>
 
         <label for="inMemQ">ค้นหา (ชื่อ / เบอร์ / รหัสสมาชิก)</label>
         <input id="inMemQ" type="text" placeholder="เว้นว่างเพื่อดู 40 คนแรก">
@@ -156,36 +156,7 @@
         <div id="memList"></div>
       </div>
 
-      <div class="card">
-        <h2 class="card__title">ออกรหัสชั่วคราวให้สมาชิกเก่า</h2>
-        <p class="card__hint">
-          ทำครั้งเดียวก่อนแจกลิงก์ให้สมาชิก — สมาชิกที่ย้ายมาจากระบบเดิมและยังไม่เคยเข้าใช้
-          ตอนนี้ใช้ <strong>นามสกุลตัวเอง</strong> เป็นรหัส คนที่รู้จักเขาเข้าได้เลยโดยไม่ต้องเดา
-          กดปุ่มนี้แล้วระบบจะสุ่มรหัส 8 หลักให้ทุกคน เอาไปแจกส่วนตัว
-        </p>
-
-        <div id="tempStat" class="note note--info">กำลังตรวจ...</div>
-
-        <div class="btn-row" style="margin-top:12px">
-          <button id="btTempCheck" class="btn btn--ghost btn--sm">ตรวจอีกครั้ง</button>
-          <button id="btTempIssue" class="btn">ออกรหัสให้ทุกคน</button>
-        </div>
-
-        <div id="msTemp" class="note hide"></div>
-
-        <div id="tempResult" class="hide" style="margin-top:14px">
-          <div class="note note--err">
-            <strong>⚠️ รหัสชุดนี้แสดงครั้งเดียว</strong><br>
-            ระบบเก็บรหัสไว้แบบเข้ารหัส เปิดดูย้อนหลังไม่ได้ ถ้าปิดหน้านี้ไปจะต้องกดออกรหัสใหม่
-            (ของเก่าจะใช้ไม่ได้ทันที) — <strong>กดบันทึกไฟล์เก็บไว้ก่อน</strong>
-            แจกเสร็จแล้วลบไฟล์ทิ้ง อย่าส่งต่อในกลุ่ม
-          </div>
-          <div class="btn-row" style="margin-top:10px">
-            <button id="btTempSave" class="btn btn--sm">บันทึกเป็นไฟล์</button>
-            <button id="btTempCopy" class="btn btn--ghost btn--sm">คัดลอกทั้งหมด</button>
-          </div>
-          <div id="tempList" style="margin-top:12px"></div>
-        </div>
+    </div>
       </div>
     </div>
 

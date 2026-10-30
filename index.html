@@ -47,14 +47,12 @@
   <!-- ============ เข้าสู่ระบบ ============ -->
   <section id="scLogin" class="card hide">
     <h1 class="card__title">เข้าสู่ระบบ</h1>
-    <p class="card__hint">สมาชิกเดิมที่ยังไม่เคยเปลี่ยนรหัส ใช้ <b>ชื่อ</b> และ <b>นามสกุล</b> เดิมได้เลย</p>
 
-    <label for="inUser">เบอร์โทร หรือ ชื่อ</label>
-    <input id="inUser" type="text" autocomplete="username" inputmode="text" placeholder="0812345678 หรือ ชื่อเดิมของคุณ">
-    <div class="field-note">เปลี่ยนรหัสแล้ว → ใช้เบอร์โทร &nbsp;·&nbsp; ยังไม่เคยเปลี่ยน → ใช้ชื่อเดิม</div>
+    <label for="inUser">เบอร์โทรศัพท์</label>
+    <input id="inUser" type="tel" autocomplete="username" inputmode="numeric" maxlength="10" placeholder="0812345678">
 
     <label for="inPass">รหัสผ่าน</label>
-    <input id="inPass" type="password" autocomplete="current-password" placeholder="รหัสผ่าน หรือ นามสกุลเดิม">
+    <input id="inPass" type="password" autocomplete="current-password">
 
     <div class="btn-row">
       <button id="btLogin" class="btn btn--block">เข้าสู่ระบบ</button>
@@ -62,22 +60,22 @@
     <div id="msLogin" class="note hide"></div>
 
     <hr class="hr">
-    <p class="field-note">เข้าไม่ได้ / จำรหัสไม่ได้ → ติดต่อแอดมินเพื่อรีเซ็ตรหัสให้ครับ</p>
+    <div class="btn-row">
+      <button id="btGoSelf" class="btn btn--ghost btn--block">เข้าครั้งแรก / ตั้งรหัสใหม่</button>
+    </div>
+    <p class="field-note">ลืมรหัสผ่าน → ติดต่อแอดมินเพื่อเปิดสิทธิ์ให้ตั้งใหม่ครับ</p>
   </section>
 
-  <!-- ============ ตั้งค่าครั้งแรก ============ -->
-  <section id="scSetup" class="card hide">
-    <h1 class="card__title">ตั้งค่าบัญชีครั้งแรก</h1>
-    <p class="card__hint">
-      เพื่อไม่ให้ชื่อซ้ำกัน ระบบใหม่ใช้ <b>เบอร์โทร</b> เป็นชื่อผู้ใช้ ทำครั้งเดียวจบครับ
-    </p>
+  <!-- ============ ตั้งรหัสผ่านเอง (ไม่ต้อง login) ============ -->
+  <section id="scSelf" class="card hide">
+    <h1 class="card__title">ตั้งรหัสผ่าน</h1>
+    <p class="card__hint">สำหรับคนที่เพิ่งสมัคร หรือแอดมินเพิ่งเปิดสิทธิ์ให้</p>
 
-    <label for="inPhone">เบอร์โทรศัพท์ (ใช้เข้าระบบครั้งต่อไป)</label>
-    <input id="inPhone" type="tel" inputmode="numeric" maxlength="13" placeholder="0812345678">
-    <div class="field-note">เบอร์นี้จะเป็นชื่อผู้ใช้ของคุณ ห้ามซ้ำกับสมาชิกคนอื่น</div>
+    <label for="inSelfPhone">เบอร์โทรศัพท์ที่แจ้งไว้กับแอดมิน</label>
+    <input id="inSelfPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="0812345678">
 
     <label for="inNew1">รหัสผ่านใหม่</label>
-    <input id="inNew1" type="password" autocomplete="new-password" placeholder="เช่น 25160812 หรือ fa123456">
+    <input id="inNew1" type="password" autocomplete="new-password" placeholder="เช่น 25160812">
     <ul id="ruleList" class="rules">
       <li data-rule="len">ยาว 8 ตัวขึ้นไป</li>
       <li data-rule="num">มีตัวเลข (ใส่ตัวเลขล้วนก็ได้)</li>
@@ -88,27 +86,14 @@
     <input id="inNew2" type="password" autocomplete="new-password" placeholder="พิมพ์รหัสเดิมอีกครั้ง">
 
     <div class="btn-row">
-      <button id="btSetup" class="btn btn--block">บันทึกและเข้าใช้งาน</button>
+      <button id="btSelf" class="btn btn--block">บันทึกและเข้าใช้งาน</button>
     </div>
-    <div id="msSetup" class="note hide"></div>
-  </section>
+    <div id="msSelf" class="note hide"></div>
 
-  <!-- ============ ตั้งรหัสใหม่ (แอดมินรีเซ็ตมา) ============ -->
-  <section id="scNewPass" class="card hide">
-    <h1 class="card__title">ตั้งรหัสผ่านใหม่</h1>
-    <p class="card__hint">แอดมินรีเซ็ตรหัสให้คุณ กรุณาตั้งรหัสใหม่ก่อนใช้งาน</p>
-
-    <label for="inRs1">รหัสผ่านใหม่</label>
-    <input id="inRs1" type="password" autocomplete="new-password">
-    <div class="field-note">ยาว 8 ตัวขึ้นไป ต้องมีตัวเลข (ใส่ตัวเลขล้วนก็ได้) ไม่มีเว้นวรรค</div>
-
-    <label for="inRs2">ยืนยันรหัสผ่านใหม่</label>
-    <input id="inRs2" type="password" autocomplete="new-password">
-
+    <hr class="hr">
     <div class="btn-row">
-      <button id="btNewPass" class="btn btn--block">บันทึกรหัสใหม่</button>
+      <button id="btBackLogin" class="btn btn--plain btn--block">ย้อนกลับไปหน้าเข้าสู่ระบบ</button>
     </div>
-    <div id="msNewPass" class="note hide"></div>
   </section>
 
   <!-- ============ หน้าหลักสมาชิก ============ -->
