@@ -491,6 +491,7 @@
     var lead  = 'ทำครั้งเดียว แล้วจะมีไอคอนอยู่บนหน้าจอเหมือนแอปทั่วไป เปิดได้เร็วกว่าและไม่ต้องพิมพ์ลิงก์';
     var steps = [];
     var note  = '';
+    var copy  = false;          // โชว์ปุ่มคัดลอกลิงก์ไหม (เคสที่ต้องเอาลิงก์ไปเปิดที่อื่น)
 
     if (isStandalone()) {
       title = 'ติดตั้งเรียบร้อยแล้ว';
@@ -502,13 +503,16 @@
       steps = ['กดปุ่มเมนู <b>⋯</b> หรือ <b>⋮</b> มุมขวาบน',
                'เลือก <b>เปิดในเบราว์เซอร์</b> (Open in browser)',
                'แล้วกดปุ่ม <b>ติดตั้งเป็นแอป</b> ในหน้าโปรไฟล์อีกครั้ง'];
+      note  = 'หาเมนูไม่เจอ? กดปุ่มข้างล่างคัดลอกลิงก์ แล้วเปิดเบราว์เซอร์เองแล้ววางได้เลย';
+      copy  = true;
 
     } else if (isIos()) {
       if (!isSafari()) {
         title = 'เปิดด้วย Safari ก่อน';
         lead  = 'บน iPhone/iPad ติดตั้งได้จาก Safari เท่านั้น (ข้อกำหนดของ Apple)';
-        steps = ['ก๊อปลิงก์หน้านี้', 'เปิดแอป <b>Safari</b> แล้ววางลิงก์',
+        steps = ['กดปุ่ม <b>คัดลอกลิงก์</b> ข้างล่าง', 'เปิดแอป <b>Safari</b> แล้ววางลิงก์',
                  'กดปุ่ม <b>ติดตั้งเป็นแอป</b> ในหน้าโปรไฟล์อีกครั้ง'];
+        copy  = true;
       } else {
         title = 'ติดตั้งบน iPhone / iPad';
         steps = ['กดปุ่ม <b>แชร์</b> ด้านล่างของ Safari (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น)',
@@ -552,7 +556,32 @@
     show(el('insSteps'), steps.length > 0);
     el('insNote').innerHTML = note;
     show(el('insNote'), !!note);
+    show(el('insCopyRow'), copy);
+    el('insCopy').textContent = 'คัดลอกลิงก์หน้านี้';
     show(el('mdIos'), true);
+  }
+
+  /** คัดลอกลิงก์หน้านี้ — ตัดพารามิเตอร์ท้าย URL ออก จะได้ลิงก์สะอาด */
+  function copyAppLink() {
+    var url = location.origin + location.pathname;
+    var btn = el('insCopy');
+    var ok  = function () {
+      btn.textContent = 'คัดลอกแล้ว ✓';
+      setTimeout(function () { btn.textContent = 'คัดลอกลิงก์หน้านี้'; }, 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(ok, manual);
+    } else { manual(); }
+
+    function manual() {
+      var ta = document.createElement('textarea');
+      ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ok(); }
+      catch (e) { btn.textContent = url; }     // คัดลอกไม่ได้ -> โชว์ลิงก์ให้ลากคัดลอกเอง
+      document.body.removeChild(ta);
+    }
   }
 
   function bindInstall() {
@@ -563,6 +592,7 @@
     };
     el('iosClose').onclick = function () { show(el('mdIos'), false); };
     el('btHowInstall').onclick = doInstall;      // ปุ่มถาวรในหน้าโปรไฟล์
+    el('insCopy').onclick = copyAppLink;
     el('mdIos').onclick    = function (e) { if (e.target === el('mdIos')) show(el('mdIos'), false); };
   }
 
