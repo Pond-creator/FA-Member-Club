@@ -656,3 +656,14 @@ textarea { min-height: 72px; resize: vertical; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .shot__date { font-weight: 400; color: var(--ink-soft); font-size: 10.5px; }
+
+/* สรุปจำนวนสมาชิกตามสถานะ (หัวรายชื่อในหน้าแอดมิน) */
+.memsum { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 12px; }
+.memsum__i {
+  font-size: 12px; padding: 4px 10px; border-radius: 999px;
+  background: var(--gold-bg); border: 1px solid var(--gold-soft); color: #7a6122;
+}
+.memsum__i b { font-size: 13.5px; }
+.memsum__i.is-ok   { background: #eef6f0; border-color: #cfe4d6; color: var(--ok); }
+.memsum__i.is-wait { background: #fdf8ea; border-color: #e8d9a8; color: #8a6d14; }
+.memsum__i.is-none { background: #fdf4f2; border-color: #eed6cf; color: var(--danger); }

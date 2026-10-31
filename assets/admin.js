@@ -236,6 +236,24 @@
   }
 
   // ---------------- จัดการสมาชิก ----------------
+  /** สรุปจำนวนบนหัวรายชื่อ — ไว้ดูความคืบหน้าว่าใส่เบอร์/ตั้งรหัสไปแล้วกี่คน */
+  function memSummary(r) {
+    var c = r.count || {};
+    var line = 'แสดง ' + (r.shown || r.members.length) + ' คน' +
+      (r.matched && r.matched > (r.shown || 0) ? ' จากที่ค้นเจอ ' + r.matched + ' คน' : '') +
+      ' · ทั้งหมด ' + r.total + ' คน';
+
+    if (c.ready === undefined) return '<p class="field-note">' + line + '</p>';
+
+    return '<p class="field-note">' + line + '</p>' +
+      '<div class="memsum">' +
+        '<span class="memsum__i"><b>' + (c.admin || 0) + '</b> แอดมิน</span>' +
+        '<span class="memsum__i is-ok"><b>' + (c.ready || 0) + '</b> พร้อมใช้</span>' +
+        '<span class="memsum__i is-wait"><b>' + (c.waiting || 0) + '</b> รอตั้งรหัส</span>' +
+        '<span class="memsum__i is-none"><b>' + (c.nophone || 0) + '</b> ยังไม่มีเบอร์</span>' +
+      '</div>';
+  }
+
   // keepMsg = true -> ไม่ล้างข้อความผลด้านบน (ใช้ตอนโหลดรายชื่อใหม่หลังใส่เบอร์/เปิดสิทธิ์
   //                   ไม่งั้นข้อความ "บอกเจ้าตัวว่า..." จะหายทันทีก่อนแอดมินได้อ่าน)
   function doMemQuery(keepMsg) {
@@ -245,7 +263,7 @@
     F.auth('adminMembers', { q: el('inMemQ').value.trim(), limit: 40 }).then(function (r) {
       if (!r.members.length) { el('memList').innerHTML = '<div class="empty">ไม่พบสมาชิก</div>'; return; }
       el('memList').innerHTML =
-        '<p class="field-note">แสดง ' + r.members.length + ' คน จากทั้งหมด ' + r.total + ' คน</p>' +
+        memSummary(r) +
         r.members.map(function (m) {
           var badge, btn;
           if (!m.phone) {
