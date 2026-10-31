@@ -594,17 +594,17 @@ textarea { min-height: 72px; resize: vertical; }
   object-fit: contain; cursor: zoom-in;
   padding: 4px;
 }
-/* ปุ่มขยายมุมขวาบน — แตะที่รูปก็เปิดได้เหมือนกัน ปุ่มนี้ไว้บอกให้รู้ว่ากดได้ */
+/* ปุ่มขยายอยู่ในแถบล่าง ไม่ลอยทับรูป — ผลงานเป็นเอกสาร ตัวหนังสือสำคัญ ห้ามมีอะไรบัง
+   (แตะที่รูปก็เปิดเต็มจอได้เหมือนกัน ปุ่มนี้ไว้บอกให้รู้ว่ากดได้) */
 .shot__zoom {
-  position: absolute; top: 6px; right: 6px;
-  width: 26px; height: 26px; padding: 0;
-  border: 0; border-radius: 8px; cursor: zoom-in;
-  background: rgba(255,255,255,.88);
-  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  position: relative;
+  flex: 0 0 38px;
+  cursor: zoom-in;
 }
 .shot__zoom::before {
   content: '';
-  position: absolute; inset: 6px;
+  position: absolute; inset: 0;
+  margin: auto; width: 15px; height: 15px;
   background: var(--c, var(--gold));
   -webkit-mask: var(--expand) center/contain no-repeat;
           mask: var(--expand) center/contain no-repeat;
@@ -626,3 +626,12 @@ textarea { min-height: 72px; resize: vertical; }
 @media (min-width: 520px) { .shots { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .shots { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .shots .shot img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; padding: 4px; background: var(--gold-bg); }
+
+/* กิจกรรมที่มีไฟล์น้อย -> ช่องใหญ่ขึ้น จะได้ไม่เหลือที่ว่างทั้งแถวและอ่านใบเกียรติบัตรออก
+   data-n = จำนวนไฟล์ (นับสูงสุด 3 พอ) */
+.grid[data-n="1"] { grid-template-columns: minmax(0, 220px); }
+.grid[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 200px)); }
+@media (min-width: 520px) {
+  .grid[data-n="1"] { grid-template-columns: minmax(0, 260px); }
+  .grid[data-n="2"] { grid-template-columns: repeat(2, minmax(0, 230px)); }
+}

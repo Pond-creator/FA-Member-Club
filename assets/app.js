@@ -111,7 +111,7 @@
           (ev.event_date ? '<span class="event__meta">' + esc(ev.event_date) + '</span>' : '') +
           '<span class="event__meta">' + ev.files.length + ' ไฟล์</span>' +
         '</div>' +
-        '<div class="grid">' + cells + '</div>' +
+        '<div class="grid" data-n="' + Math.min(ev.files.length, 3) + '">' + cells + '</div>' +
       '</div>';
     }).join('');
   }
@@ -135,9 +135,9 @@
           ? '<img loading="lazy" src="' + esc(thumb) + '" alt="" data-open="' + idx +
             '" data-big="' + esc(F.thumbUrl(f.file_id, 900)) + '">'
           : '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=">') +
-        '<button type="button" class="shot__zoom" data-open="' + idx + '" aria-label="ดูเต็มจอ"></button>' +
       '</div>' +
       '<div class="shot__act">' +
+        '<button type="button" class="shot__zoom" data-open="' + idx + '" aria-label="ดูเต็มจอ"></button>' +
         '<a href="' + esc(F.dlUrl(f.file_id, f.url)) + '" target="_blank" rel="noopener">บันทึก</a>' +
       '</div>' +
     '</div>';
