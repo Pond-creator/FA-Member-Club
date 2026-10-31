@@ -427,9 +427,13 @@ textarea { min-height: 72px; resize: vertical; }
 .one__row span { color: var(--ink-soft); flex: none; }
 .one__row b { text-align: right; word-break: break-word; }
 .one__h3 { font-size: 15px; margin: 18px 0 10px; color: var(--gold); }
-.one__ev { margin-bottom: 16px; }
-.one__evname { font-weight: 600; font-size: 13.5px; margin-bottom: 8px; }
-.one__count { color: var(--ink-soft); font-weight: 400; }
+.one__count { color: var(--ink-soft); font-weight: 400; font-size: 12.5px; }
+
+/* จอกว้างพอ -> ข้อมูลแบ่ง 2 คอลัมน์ การ์ดจะได้ไม่ยืดยาวเป็นแถบเดียวจนต้องเลื่อนหา */
+@media (min-width: 680px) {
+  .one__info { display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; }
+  .one__info .one__row:nth-last-child(-n+2) { border-bottom: 0; }
+}
 /* แถวรูปผลงาน — เลื่อนแนวนอนบนมือถือ ไม่ดันหน้ายาว */
 .shots {
   display: grid;

@@ -399,6 +399,12 @@
     return ['wait', 'รอเจ้าตัวตั้งรหัสเอง'];
   }
 
+  /** คีย์เรียงกิจกรรม : แปลง dd/MM/yyyy เป็นตัวเลข yyyymmdd ไม่มีวันที่ = 0 */
+  function evKey(ev) {
+    var m = String(ev.event_date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    return m ? (Number(m[3]) * 10000 + Number(m[2]) * 100 + Number(m[1])) : 0;
+  }
+
   function openOne(memberId) {
     say(el('msOne'), '', '');
     el('oneDetail').innerHTML = '<div class="empty">กำลังโหลด...</div>';
@@ -430,22 +436,33 @@
         return '<div class="one__row"><span>' + it[0] + '</span><b>' + esc(String(it[1])) + '</b></div>';
       }).join('');
 
-      var works = !r.events.length
+      // รวมทุกกิจกรรมเป็นแกลเลอรีเดียว เหมือนหน้าสมาชิก — กิจกรรมล่าสุดขึ้นก่อน แต่ละกิจกรรมมีสีประจำตัว
+      var evs = r.events.slice().sort(function (a, b) {
+        var d = evKey(b) - evKey(a);
+        if (d) return d;
+        return String(b.event_id).localeCompare(String(a.event_id), 'en', { numeric: true });
+      });
+
+      var cells = [];
+      evs.forEach(function (e, iEv) {
+        e.files.forEach(function (f) {
+          cells.push(
+            '<div class="shot" data-c="' + (iEv % 6) + '">' +
+              '<div class="shot__pic">' +
+                '<img src="' + esc(f.thumb) + '" alt="' + esc(f.name) + '" loading="lazy">' +
+              '</div>' +
+              '<div class="shot__ev" title="' + esc(e.event_name) + '">' + esc(e.event_name) +
+                (e.event_date ? ' <span class="shot__date">' + esc(e.event_date) + '</span>' : '') +
+              '</div>' +
+              '<div class="shot__act"><a href="' + esc(F.viewUrl(f.file_id, f.url)) +
+                '" target="_blank" rel="noopener">ดูไฟล์</a></div>' +
+            '</div>');
+        });
+      });
+
+      var works = !cells.length
         ? '<div class="empty">ยังไม่มีผลงานในระบบ</div>'
-        : r.events.map(function (e) {
-            return '<div class="one__ev">' +
-              '<div class="one__evname">' + esc(e.event_name) +
-                (e.event_date ? ' · ' + esc(e.event_date) : '') +
-                ' <span class="one__count">' + e.files.length + ' ไฟล์</span></div>' +
-              '<div class="shots">' + e.files.map(function (f) {
-                return '<div class="shot">' +
-                  '<img src="' + esc(f.thumb) + '" alt="' + esc(f.name) + '" loading="lazy">' +
-                  '<div class="shot__act"><a href="' + esc(F.viewUrl(f.file_id, f.url)) +
-                    '" target="_blank" rel="noopener">ดูไฟล์</a></div>' +
-                '</div>';
-              }).join('') + '</div>' +
-            '</div>';
-          }).join('');
+        : '<div class="grid" data-n="' + Math.min(cells.length, 3) + '">' + cells.join('') + '</div>';
 
       el('oneDetail').innerHTML =
         '<div class="card card--inner">' + head +
@@ -461,7 +478,9 @@
             '<button class="btn btn--sm" id="btSetTier">บันทึกระดับ</button>' +
           '</div>' +
           '<div id="msTier" class="note hide"></div>' +
-          '<h3 class="one__h3">ผลงาน</h3>' + works +
+          '<h3 class="one__h3">ผลงาน' +
+            (cells.length ? ' <span class="one__count">เรียงกิจกรรมล่าสุดก่อน</span>' : '') +
+          '</h3>' + works +
           '<div class="btn-row" style="margin-top:14px">' +
             '<button class="btn btn--plain btn--sm" id="btOneClose">ปิด</button>' +
           '</div>' +
