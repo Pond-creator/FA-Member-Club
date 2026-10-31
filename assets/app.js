@@ -71,6 +71,13 @@
     el('mePhone').textContent = me.phone ? 'เบอร์ ' + me.phone : 'ชื่อเดิม ' + me.old_user;
     paintAvatar(el('mePic'), me, true);
 
+    // ระดับสมาชิก — ใส่ data-tier ให้ทั้งป้ายและกรอบรูป ที่เหลือ CSS จัดการสีกับประกายเอง
+    var tier = me.tier || 'ทั่วไป';
+    var tg = el('meTier');
+    tg.textContent = tier;
+    tg.setAttribute('data-tier', tier);
+    el('meRing').setAttribute('data-tier', tier);
+
     var role = el('meRole');
     role.textContent = me.status === 'Admin' ? 'แอดมิน' : 'สมาชิก';
     role.className = 'badge' + (me.status === 'Admin' ? '' : ' badge--ok');
@@ -91,14 +98,14 @@
       return;
     }
 
-    box.innerHTML = events.map(function (ev) {
+    box.innerHTML = events.map(function (ev, iEv) {
       var cells = ev.files.map(function (f) {
         var idx = FLAT.length;
         FLAT.push({ f: f, event: ev.event_name });
         return shotHtml(f, idx);
       }).join('');
 
-      return '<div class="card event">' +
+      return '<div class="card event" data-c="' + (iEv % 6) + '">' +
         '<div class="event__head">' +
           '<span class="event__name">' + esc(ev.event_name) + '</span>' +
           (ev.event_date ? '<span class="event__meta">' + esc(ev.event_date) + '</span>' : '') +
@@ -123,12 +130,14 @@
     // รูปโหลดตรงจาก Drive ไม่ผ่านหลังบ้าน -> เร็วและไม่กินโควต้า
     var thumb = f.thumb || '';
     return '<div class="shot">' +
-      (thumb
-        ? '<img loading="lazy" src="' + esc(thumb) + '" alt="" data-open="' + idx +
-          '" data-big="' + esc(F.thumbUrl(f.file_id, 900)) + '" style="cursor:zoom-in">'
-        : '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=">') +
+      '<div class="shot__pic">' +
+        (thumb
+          ? '<img loading="lazy" src="' + esc(thumb) + '" alt="" data-open="' + idx +
+            '" data-big="' + esc(F.thumbUrl(f.file_id, 900)) + '">'
+          : '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=">') +
+        '<button type="button" class="shot__zoom" data-open="' + idx + '" aria-label="ดูเต็มจอ"></button>' +
+      '</div>' +
       '<div class="shot__act">' +
-        '<button type="button" data-open="' + idx + '">ดูเต็มจอ</button>' +
         '<a href="' + esc(F.dlUrl(f.file_id, f.url)) + '" target="_blank" rel="noopener">บันทึก</a>' +
       '</div>' +
     '</div>';

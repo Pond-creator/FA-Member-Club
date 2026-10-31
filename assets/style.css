@@ -1,6 +1,9 @@
 /* FA Member Club — โทนขาว-ทอง / ออกแบบมือถือก่อน */
 
 :root {
+  /* ไอคอนโล่สำหรับป้ายระดับสมาชิก — ฝังเป็น SVG ในไฟล์ ไม่ต้องโหลดรูปเพิ่ม */
+  --shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 0 24 4v10c0 7-5 11.5-12 14C5 25.5 0 21 0 14V4Z'/%3E%3C/svg%3E");
+  --expand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 9V3h6v2H5v4Zm12-6h6v6h-2V5h-4Zm6 12v6h-6v-2h4v-4ZM9 21H3v-6h2v4h4Z'/%3E%3C/svg%3E");
   --bg:        #fbf9f5;
   --card:      #ffffff;
   --ink:       #2c2a26;
@@ -163,24 +166,6 @@ textarea { min-height: 72px; resize: vertical; }
 .event__head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .event__name { font-weight: 600; font-size: 15.5px; }
 .event__meta { font-size: 12.5px; color: var(--ink-soft); }
-
-.grid {
-  display: grid; gap: 12px;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-}
-.shot {
-  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff;
-}
-.shot img {
-  display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--gold-bg);
-}
-.shot__act { display: flex; border-top: 1px solid var(--line); }
-.shot__act a, .shot__act button {
-  flex: 1; padding: 9px 4px; text-align: center;
-  font: inherit; font-size: 12.5px; font-weight: 600;
-  color: var(--gold); background: #fff; border: 0; text-decoration: none; cursor: pointer;
-}
-.shot__act > * + * { border-left: 1px solid var(--line); }
 
 /* ---------- รายการ ---------- */
 .row {
@@ -451,3 +436,190 @@ textarea { min-height: 72px; resize: vertical; }
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 10px;
 }
+
+/* ===================== ระดับสมาชิก (tier) =====================
+   4 ระดับ : ทั่วไป / เงิน / ทอง / แพลทินัม
+   ใช้ data-tier เป็นตัวสั่งสี ไม่ต้องเขียน class แยกหลายชั้น
+   เอฟเฟกต์ระยิบระยับทำด้วย gradient เลื่อนตำแหน่ง ไม่ใช้รูป ไม่กินเน็ต
+   ============================================================= */
+
+/* ---------- โล่ระดับ ---------- */
+.tier {
+  display: none;                      /* ไม่มีระดับ = ไม่โชว์ */
+  align-items: center; gap: 5px;
+  padding: 4px 12px 4px 9px;
+  border-radius: 999px;
+  font-size: 12.5px; font-weight: 700;
+  border: 1px solid transparent;
+  vertical-align: middle;
+  position: relative; overflow: hidden;
+}
+.tier::before {                        /* ไอคอนโล่ */
+  content: '';
+  width: 13px; height: 15px; flex: none;
+  background: currentColor;
+  -webkit-mask: var(--shield) center/contain no-repeat;
+          mask: var(--shield) center/contain no-repeat;
+}
+.tier[data-tier] { display: inline-flex; }
+
+/* เส้นแสงกวาดผ่าน — ตัวที่ทำให้ดู "ระยิบระยับ" */
+.tier[data-tier]:not([data-tier='ทั่วไป'])::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg,
+    transparent 35%, rgba(255,255,255,.85) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: tier-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes tier-shine {
+  0%        { background-position: 160% 0; }
+  45%, 100% { background-position: -60% 0; }
+}
+
+.tier[data-tier='ทั่วไป'] {
+  background: #f3efe6; color: #8a8375; border-color: #e3dccd;
+}
+.tier[data-tier='เงิน'] {
+  background: linear-gradient(135deg, #f6f7f9, #d7dde4 45%, #f6f7f9);
+  color: #5d6671; border-color: #c3ccd6;
+}
+.tier[data-tier='ทอง'] {
+  background: linear-gradient(135deg, #fff6d8, #f0cf7a 45%, #fff6d8);
+  color: #7a5c14; border-color: #e0bb5c;
+}
+.tier[data-tier='แพลทินัม'] {
+  background: linear-gradient(135deg, #eef3fb, #cfd9ea 35%, #f7eaf5 65%, #eef3fb);
+  color: #4a5370; border-color: #c0cadd;
+  box-shadow: 0 0 10px rgba(150,170,220,.45);
+}
+
+/* ---------- กรอบรูปโปรไฟล์ตามระดับ ---------- */
+.ring {
+  width: 116px; height: 116px;
+  margin: 0 auto;
+  border-radius: 50%;
+  padding: 6px;
+  display: grid; place-items: center;
+  background: var(--gold-bg);
+  position: relative;
+}
+.ring > .avatar { margin: 0; }
+
+.ring[data-tier='ทั่วไป'] { background: #ece7db; }
+.ring[data-tier='เงิน'] {
+  background: conic-gradient(from 0deg, #cfd6de, #ffffff, #aab4c0, #ffffff, #cfd6de);
+}
+.ring[data-tier='ทอง'] {
+  background: conic-gradient(from 0deg, #e0bb5c, #fff4cf, #c99a28, #fff4cf, #e0bb5c);
+}
+.ring[data-tier='แพลทินัม'] {
+  background: conic-gradient(from 0deg, #cfd9ea, #ffffff, #e7d4ef, #ffffff, #b9c6de, #cfd9ea);
+}
+/* วงแหวนหมุนช้าๆ เฉพาะระดับสูง */
+.ring[data-tier='เงิน'], .ring[data-tier='ทอง'], .ring[data-tier='แพลทินัม'] {
+  animation: ring-spin 9s linear infinite;
+}
+.ring[data-tier='เงิน'] > .avatar,
+.ring[data-tier='ทอง'] > .avatar,
+.ring[data-tier='แพลทินัม'] > .avatar {
+  animation: ring-spin 9s linear infinite reverse;   /* หมุนสวนกลับ รูปจะได้ไม่เอียงตาม */
+}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+
+/* ประกายรอบวงแหวนของแพลทินัม */
+.ring[data-tier='แพลทินัม']::after {
+  content: '';
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  box-shadow: 0 0 16px 2px rgba(160,180,230,.55);
+  pointer-events: none;
+}
+
+/* เคารพการตั้งค่าเครื่องที่ขอให้ลดการเคลื่อนไหว (บางคนเวียนหัว) */
+@media (prefers-reduced-motion: reduce) {
+  .tier[data-tier]::after,
+  .ring[data-tier],
+  .ring[data-tier] > .avatar { animation: none; }
+}
+
+/* ===================== แกลเลอรีผลงาน =====================
+   เรียงแนวนอน 3 ช่องบนมือถือ / 4 บนจอกลาง / 5 บนจอใหญ่
+   แต่ละกิจกรรมได้สีประจำตัว (วน 6 สี) ดูแล้วแยกออกว่าอันไหนงานไหน
+   ========================================================= */
+.grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (min-width: 520px) { .grid { gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* สีประจำกิจกรรม : --c เส้นกรอบ/ตัวอักษร · --cb พื้นอ่อน */
+.event            { --c: #c2a052; --cb: #fdf8ea; }
+.event[data-c="1"]{ --c: #4f9a8f; --cb: #edf7f5; }
+.event[data-c="2"]{ --c: #c2748a; --cb: #fdf0f3; }
+.event[data-c="3"]{ --c: #6385c0; --cb: #eef2fb; }
+.event[data-c="4"]{ --c: #6f9f58; --cb: #f0f7ec; }
+.event[data-c="5"]{ --c: #9173c0; --cb: #f4f0fb; }
+
+.event__name::before {              /* จุดสีนำหน้าชื่อกิจกรรม */
+  content: '';
+  display: inline-block; vertical-align: middle;
+  width: 9px; height: 9px; margin-right: 7px;
+  border-radius: 50%; background: var(--c, var(--gold));
+}
+
+.shot {
+  border: 2px solid var(--c, var(--line));
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.shot:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.10); }
+
+/* กำหนดสัดส่วนที่กรอบ ไม่ใช่ที่รูป -> รูปยังไม่โหลดหรือโหลดไม่ขึ้น กรอบก็ยังเป็นจัตุรัสเท่ากันหมด */
+.shot__pic {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--cb, var(--gold-bg));
+  overflow: hidden;
+}
+.shot__pic img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; cursor: zoom-in;
+}
+/* ปุ่มขยายมุมขวาบน — แตะที่รูปก็เปิดได้เหมือนกัน ปุ่มนี้ไว้บอกให้รู้ว่ากดได้ */
+.shot__zoom {
+  position: absolute; top: 6px; right: 6px;
+  width: 26px; height: 26px; padding: 0;
+  border: 0; border-radius: 8px; cursor: zoom-in;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.shot__zoom::before {
+  content: '';
+  position: absolute; inset: 6px;
+  background: var(--c, var(--gold));
+  -webkit-mask: var(--expand) center/contain no-repeat;
+          mask: var(--expand) center/contain no-repeat;
+}
+.shot__act { display: flex; border-top: 1px solid var(--cb, var(--line)); }
+.shot__act a, .shot__act button {
+  flex: 1; padding: 8px 4px; text-align: center;
+  font: inherit; font-size: 12px; font-weight: 700;
+  color: var(--c, var(--gold)); background: var(--cb, #fff);
+  border: 0; text-decoration: none; cursor: pointer;
+}
+.shot__act > * + * { border-left: 1px solid #fff; }
+
+/* แกลเลอรีในหน้าแอดมิน (ไม่มีสีประจำกิจกรรม ใช้สีทองตามธีม) */
+.shots {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (min-width: 520px) { .shots { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .shots { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.shots .shot img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--gold-bg); }

@@ -5,6 +5,7 @@
 
   var events = [];
   var picked = null;   // สมาชิกที่เลือกไว้เพื่ออัปโหลด
+  var TIERS  = ['ทั่วไป', 'เงิน', 'ทอง', 'แพลทินัม'];   // ค่าสำรอง เดี๋ยวหลังบ้านส่งตัวจริงมาทับ
 
   // ---------------- เข้าสู่ระบบ ----------------
   function doLogin() {
@@ -346,6 +347,7 @@
     el('oneList').innerHTML = '<div class="empty">กำลังค้นหา...</div>';
 
     F.auth('adminMembers', { q: q, limit: 40 }).then(function (r) {
+      if (r.tiers && r.tiers.length) TIERS = r.tiers;
       if (!r.members.length) { el('oneList').innerHTML = '<div class="empty">ไม่พบสมาชิกที่ตรงกับคำค้นนี้</div>'; return; }
 
       // เจอคนเดียว -> เปิดรายละเอียดให้เลย ไม่ต้องกดซ้ำ
@@ -404,6 +406,7 @@
         ['ชื่อเดิมจากระบบเก่า',     m.old_user || '—'],
         ['เข้าระบบล่าสุด',          m.last_login || 'ยังไม่เคยเข้า'],
         ['เพิ่มเข้าระบบเมื่อ',       m.created_at || '—'],
+        ['ระดับสมาชิก',             m.tier || 'ทั่วไป'],
         ['ผลงานทั้งหมด',            r.file_count + ' ไฟล์ จาก ' + r.event_count + ' กิจกรรม']
       ].map(function (it) {
         return '<div class="one__row"><span>' + it[0] + '</span><b>' + esc(String(it[1])) + '</b></div>';
@@ -429,11 +432,36 @@
       el('oneDetail').innerHTML =
         '<div class="card card--inner">' + head +
           '<div class="one__info">' + info + '</div>' +
+          '<h3 class="one__h3">เปลี่ยนระดับสมาชิก</h3>' +
+          '<div class="btn-row">' +
+            '<select id="selTier" style="flex:1;min-width:140px">' +
+              TIERS.map(function (t) {
+                return '<option value="' + esc(t) + '"' +
+                       (t === (m.tier || 'ทั่วไป') ? ' selected' : '') + '>' + esc(t) + '</option>';
+              }).join('') +
+            '</select>' +
+            '<button class="btn btn--sm" id="btSetTier">บันทึกระดับ</button>' +
+          '</div>' +
+          '<div id="msTier" class="note hide"></div>' +
           '<h3 class="one__h3">ผลงาน</h3>' + works +
           '<div class="btn-row" style="margin-top:14px">' +
             '<button class="btn btn--plain btn--sm" id="btOneClose">ปิด</button>' +
           '</div>' +
         '</div>';
+
+      el('btSetTier').onclick = function () {
+        var t = el('selTier').value;
+        if (t === (m.tier || 'ทั่วไป')) { say(el('msTier'), 'ok', 'ระดับเดิมอยู่แล้ว ไม่ต้องบันทึก'); return; }
+        F.busy(true, ['กำลังบันทึกระดับ...']);
+        F.auth('adminSetTier', { member_id: m.member_id, tier: t }).then(function (res) {
+          say(el('msTier'), 'ok', res.msg);
+          m.tier = t;                       // อัปเดตในหน้าเลย จะได้ไม่ต้องโหลดใหม่
+          openOne(m.member_id);             // วาดใหม่ให้ตัวเลขกับป้ายตรงกัน
+        }).catch(function (err) {
+          say(el('msTier'), 'err', /ไม่รู้จักคำสั่ง/.test(err.message)
+            ? 'หลังบ้านยังไม่ได้อัปเดต — วาง Code.gs ใหม่แล้ว deploy ก่อนนะครับ' : err.message);
+        }).then(function () { F.busy(false); });
+      };
 
       el('btOneClose').onclick = function () {
         show(el('oneDetail'), false);
