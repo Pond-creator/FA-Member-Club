@@ -13,7 +13,7 @@
  * เวลาแก้ไฟล์ในโฟลเดอร์ web/ ให้ขยับเลข VERSION ขึ้น 1 ด้วย
  */
 
-var VERSION = 'fa-v10';
+var VERSION = 'fa-v11';
 var SHELL   = VERSION + '-shell';
 var FONTS   = VERSION + '-fonts';
 

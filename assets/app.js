@@ -468,15 +468,91 @@
   }
 
   function doInstall() {
-    if (deferredPrompt) {                 // Android / Chrome
+    if (deferredPrompt) {                 // เบราว์เซอร์เสนอติดตั้งได้ -> เด้งของจริงเลย
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function () {
         deferredPrompt = null;
         show(el('insBar'), false);
       });
-    } else {                              // iOS หรือเบราว์เซอร์ที่ไม่รองรับปุ่ม
-      show(el('mdIos'), true);
+      return;
     }
+    openInstallHelp();                    // ไม่เสนอ -> สอนวิธีทำเองตามเครื่อง
+  }
+
+  // ---------------- สอนติดตั้งตามเครื่องที่ใช้ ----------------
+  function isAndroid() { return /Android/i.test(navigator.userAgent); }
+  function isEdge()    { return /Edg\//.test(navigator.userAgent); }
+  function isFirefox() { return /Firefox|FxiOS/i.test(navigator.userAgent); }
+  function isChromium(){ return /Chrome|CriOS|Chromium/i.test(navigator.userAgent); }
+  function inApp()     { return /Line|FBAN|FBAV|Instagram|Messenger/i.test(navigator.userAgent); }
+
+  function openInstallHelp() {
+    var title = 'ติดตั้งเป็นแอป';
+    var lead  = 'ทำครั้งเดียว แล้วจะมีไอคอนอยู่บนหน้าจอเหมือนแอปทั่วไป เปิดได้เร็วกว่าและไม่ต้องพิมพ์ลิงก์';
+    var steps = [];
+    var note  = '';
+
+    if (isStandalone()) {
+      title = 'ติดตั้งเรียบร้อยแล้ว';
+      lead  = 'ตอนนี้คุณกำลังเปิดจากแอปที่ติดตั้งไว้อยู่แล้วครับ ไม่ต้องทำอะไรเพิ่ม';
+
+    } else if (inApp()) {
+      title = 'เปิดในเบราว์เซอร์ก่อน';
+      lead  = 'ตอนนี้กำลังเปิดอยู่ในแอปอื่น (เช่น LINE หรือ Facebook) ซึ่งติดตั้งไม่ได้';
+      steps = ['กดปุ่มเมนู <b>⋯</b> หรือ <b>⋮</b> มุมขวาบน',
+               'เลือก <b>เปิดในเบราว์เซอร์</b> (Open in browser)',
+               'แล้วกดปุ่ม <b>ติดตั้งเป็นแอป</b> ในหน้าโปรไฟล์อีกครั้ง'];
+
+    } else if (isIos()) {
+      if (!isSafari()) {
+        title = 'เปิดด้วย Safari ก่อน';
+        lead  = 'บน iPhone/iPad ติดตั้งได้จาก Safari เท่านั้น (ข้อกำหนดของ Apple)';
+        steps = ['ก๊อปลิงก์หน้านี้', 'เปิดแอป <b>Safari</b> แล้ววางลิงก์',
+                 'กดปุ่ม <b>ติดตั้งเป็นแอป</b> ในหน้าโปรไฟล์อีกครั้ง'];
+      } else {
+        title = 'ติดตั้งบน iPhone / iPad';
+        steps = ['กดปุ่ม <b>แชร์</b> ด้านล่างของ Safari (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น)',
+                 'เลื่อนหาแล้วกด <b>เพิ่มไปที่หน้าจอโฮม</b> (Add to Home Screen)',
+                 'กด <b>เพิ่ม</b> มุมขวาบน',
+                 'เสร็จแล้ว จะเห็นไอคอน <b>FA Member</b> บนหน้าจอ กดเปิดใช้ได้เลย'];
+      }
+
+    } else if (isAndroid()) {
+      title = 'ติดตั้งบน Android';
+      steps = ['กดปุ่มเมนู <b>⋮</b> มุมขวาบนของ Chrome',
+               'กด <b>ติดตั้งแอป</b> หรือ <b>เพิ่มลงในหน้าจอหลัก</b>',
+               'กด <b>ติดตั้ง</b> ยืนยัน'];
+      note  = 'ถ้าหาเมนูไม่เจอ ลองใช้ <b>Chrome</b> เปิดหน้านี้นะครับ';
+
+    } else if (isEdge()) {
+      title = 'ติดตั้งบนคอม (Edge)';
+      steps = ['กดเมนู <b>⋯</b> มุมขวาบน', 'เลือก <b>แอป</b>', 'กด <b>ติดตั้งไซต์นี้เป็นแอป</b>'];
+
+    } else if (isFirefox()) {
+      title = 'เบราว์เซอร์นี้ติดตั้งไม่ได้';
+      lead  = 'Firefox บนคอมยังไม่รองรับการติดตั้งเว็บเป็นแอปครับ';
+      steps = ['ใช้งานผ่านหน้าเว็บได้ตามปกติ ไม่ต้องติดตั้งก็ใช้ได้ครบทุกอย่าง',
+               'ถ้าอยากได้ไอคอนบนหน้าจอ ให้เปิดด้วย <b>Chrome</b> หรือ <b>Edge</b> แทน'];
+
+    } else if (isChromium()) {
+      title = 'ติดตั้งบนคอม (Chrome)';
+      steps = ['มองที่ช่องที่อยู่เว็บด้านบน ขวาสุด จะมี <b>ไอคอนจอมีลูกศรลง</b> กดได้เลย',
+               'ถ้าไม่เห็นไอคอน ให้กดเมนู <b>⋮</b> → <b>แคสต์ บันทึก และแชร์</b> → <b>ติดตั้งหน้านี้เป็นแอป</b>'];
+      note  = 'บางครั้ง Chrome จะเสนอให้ติดตั้งเองหลังใช้งานไปสักพักครับ';
+
+    } else {
+      title = 'ติดตั้งเป็นแอป';
+      lead  = 'เบราว์เซอร์ที่ใช้อยู่อาจไม่รองรับการติดตั้ง แต่ใช้งานผ่านหน้าเว็บได้ครบทุกอย่างครับ';
+      steps = ['บนมือถือ Android ให้ใช้ <b>Chrome</b>', 'บน iPhone ให้ใช้ <b>Safari</b>'];
+    }
+
+    el('insTitle').textContent = title;
+    el('insLead').textContent  = lead;
+    el('insSteps').innerHTML   = steps.map(function (t) { return '<li>' + t + '</li>'; }).join('');
+    show(el('insSteps'), steps.length > 0);
+    el('insNote').innerHTML = note;
+    show(el('insNote'), !!note);
+    show(el('mdIos'), true);
   }
 
   function bindInstall() {
@@ -486,6 +562,7 @@
       try { localStorage.setItem('fa_ins_off', '1'); } catch (e) {}
     };
     el('iosClose').onclick = function () { show(el('mdIos'), false); };
+    el('btHowInstall').onclick = doInstall;      // ปุ่มถาวรในหน้าโปรไฟล์
     el('mdIos').onclick    = function (e) { if (e.target === el('mdIos')) show(el('mdIos'), false); };
   }
 

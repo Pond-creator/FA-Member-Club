@@ -128,6 +128,7 @@
         <div class="btn-row" style="justify-content:center">
           <button id="btPickPic" class="btn btn--ghost btn--sm">เปลี่ยนรูปโปรไฟล์</button>
           <button id="btOpenPass" class="btn btn--ghost btn--sm">เปลี่ยนรหัสผ่าน</button>
+          <button id="btHowInstall" class="btn btn--ghost btn--sm">ติดตั้งเป็นแอป</button>
         </div>
         <input id="filePic" type="file" accept="image/jpeg,image/png" class="hide">
         <div id="msPic" class="note hide"></div>
@@ -155,22 +156,16 @@
   </div>
 
   <!-- ============ ขั้นตอนติดตั้งบน iPhone / iPad ============ -->
+  <!-- ป็อบอัพสอนติดตั้ง — เนื้อหาเปลี่ยนตามเครื่องที่เปิด (ดู openInstallHelp ใน app.js) -->
   <div id="mdIos" class="modal hide">
     <div class="modal__box">
       <div class="modal__head">
-        <h2 class="modal__title">ติดตั้งบน iPhone / iPad</h2>
+        <h2 id="insTitle" class="modal__title">ติดตั้งเป็นแอป</h2>
         <button id="iosClose" class="modal__x" aria-label="ปิด">&times;</button>
       </div>
-      <p class="card__hint">ทำครั้งเดียว แล้วจะมีไอคอนอยู่บนหน้าจอโหมแรกเหมือนแอปทั่วไป</p>
-      <ol class="steps">
-        <li>กดปุ่ม <b>แชร์</b> ด้านล่างของ Safari (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น)</li>
-        <li>เลื่อนหาแล้วกด <b>เพิ่มไปที่หน้าจอโหมแรก</b> (Add to Home Screen)</li>
-        <li>กด <b>เพิ่ม</b> มุมขวาบน</li>
-        <li>เสร็จแล้ว จะเห็นไอคอน <b>FA Member</b> บนหน้าจอ กดเปิดใช้ได้เลย</li>
-      </ol>
-      <div class="note note--info">
-        ต้องเปิดด้วย <b>Safari</b> เท่านั้นครับ ถ้าเปิดจาก Chrome หรือในแอป LINE จะไม่มีเมนูนี้
-      </div>
+      <p id="insLead" class="card__hint"></p>
+      <ol id="insSteps" class="steps"></ol>
+      <div id="insNote" class="note note--info hide"></div>
     </div>
   </div>
 
