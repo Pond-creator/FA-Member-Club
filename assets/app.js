@@ -87,6 +87,12 @@
   // ---------------- ผลงานของฉัน ----------------
   var FLAT = [];   // รูปทุกใบเรียงต่อกัน ใช้เลื่อนดูซ้าย-ขวาตอนเปิดเต็มจอ
 
+  /** คีย์เรียงกิจกรรม : แปลง dd/MM/yyyy เป็นตัวเลข yyyymmdd เทียบง่าย ไม่มีวันที่ = 0 */
+  function evKey(ev) {
+    var m = String(ev.event_date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    return m ? (Number(m[3]) * 10000 + Number(m[2]) * 100 + Number(m[1])) : 0;
+  }
+
   function paintWork(events) {
     var box = el('workList');
     FLAT = [];
@@ -98,23 +104,34 @@
       return;
     }
 
-    box.innerHTML = events.map(function (ev, iEv) {
-      var cells = ev.files.map(function (f) {
+    // กิจกรรมล่าสุดขึ้นก่อนเสมอ — เรียงตามวันที่จัด ถ้าไม่มีวันที่ใช้รหัสกิจกรรมแทน (EV9 ใหม่กว่า EV2)
+    var sorted = events.slice().sort(function (a, b) {
+      var d = evKey(b) - evKey(a);
+      if (d) return d;
+      return String(b.event_id).localeCompare(String(a.event_id), 'en', { numeric: true });
+    });
+
+    // รวมทุกกิจกรรมเป็นแกลเลอรีเดียว ไม่แยกการ์ด — แต่ละชิ้นมีป้ายบอกว่ามาจากกิจกรรมไหน
+    var cells = [];
+    sorted.forEach(function (ev, iEv) {
+      ev.files.forEach(function (f) {
         var idx = FLAT.length;
         FLAT.push({ f: f, event: ev.event_name });
-        return shotHtml(f, idx);
-      }).join('');
+        cells.push(shotHtml(f, idx, ev, iEv % 6));
+      });
+    });
 
-      return '<div class="card event" data-c="' + (iEv % 6) + '">' +
+    box.innerHTML =
+      '<div class="card">' +
         '<div class="event__head">' +
-          '<span class="event__name">' + esc(ev.event_name) + '</span>' +
-          (ev.event_date ? '<span class="event__meta">' + esc(ev.event_date) + '</span>' : '') +
-          '<span class="event__meta">' + ev.files.length + ' ไฟล์</span>' +
+          '<span class="event__name">ผลงานทั้งหมด</span>' +
+          '<span class="event__meta">' + cells.length + ' ไฟล์ จาก ' + sorted.length + ' กิจกรรม</span>' +
+          '<span class="event__meta">เรียงกิจกรรมล่าสุดก่อน</span>' +
         '</div>' +
-        '<div class="grid" data-n="' + Math.min(ev.files.length, 3) + '">' + cells + '</div>' +
+        '<div class="grid" data-n="' + Math.min(cells.length, 3) + '">' + cells.join('') + '</div>' +
       '</div>';
-    }).join('');
   }
+
 
   function loadWork() {
     var box = el('workList');
@@ -126,15 +143,18 @@
     });
   }
 
-  function shotHtml(f, idx) {
+  function shotHtml(f, idx, ev, color) {
     // รูปโหลดตรงจาก Drive ไม่ผ่านหลังบ้าน -> เร็วและไม่กินโควต้า
     var thumb = f.thumb || '';
-    return '<div class="shot">' +
+    return '<div class="shot" data-c="' + color + '">' +
       '<div class="shot__pic">' +
         (thumb
           ? '<img loading="lazy" src="' + esc(thumb) + '" alt="" data-open="' + idx +
             '" data-big="' + esc(F.thumbUrl(f.file_id, 900)) + '">'
           : '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=">') +
+      '</div>' +
+      '<div class="shot__ev" title="' + esc(ev.event_name) + '">' + esc(ev.event_name) +
+        (ev.event_date ? ' <span class="shot__date">' + esc(ev.event_date) + '</span>' : '') +
       '</div>' +
       '<div class="shot__act">' +
         '<button type="button" class="shot__zoom" data-open="' + idx + '" aria-label="ดูเต็มจอ"></button>' +
