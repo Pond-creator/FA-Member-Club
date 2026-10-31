@@ -167,6 +167,20 @@
         <p class="card__hint">อัปเดตทุกครั้งที่เปิดแท็บนี้</p>
         <div id="statBox" class="stats"></div>
       </div>
+
+      <div class="card">
+        <h2 class="card__title">ดูข้อมูลสมาชิกรายคน</h2>
+        <p class="card__hint">ค้นด้วย ชื่อ · เบอร์โทร · รหัสสมาชิก (MB0001) — ดูสถานะและผลงานทั้งหมดของเค้า</p>
+
+        <label for="inFindOne">ค้นหา</label>
+        <input id="inFindOne" type="text" placeholder="เช่น สมหญิง หรือ 0812345678 หรือ MB0021">
+        <div class="btn-row" style="margin-top:10px">
+          <button id="btFindOne" class="btn btn--ghost btn--sm">ค้นหา</button>
+        </div>
+        <div id="msOne" class="note hide"></div>
+        <div id="oneList"></div>
+        <div id="oneDetail" class="hide" style="margin-top:16px"></div>
+      </div>
     </div>
 
   </section>

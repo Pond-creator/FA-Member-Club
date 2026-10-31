@@ -334,6 +334,120 @@
     });
   }
 
+  // ---------------- ดูข้อมูลสมาชิกรายคน (แท็บภาพรวม) ----------------
+
+  /** ค้นหา -> ขึ้นรายชื่อให้เลือก (ใช้ action เดิม adminMembers ไม่ต้องทำของใหม่) */
+  function doFindOne() {
+    var q = el('inFindOne').value.trim();
+    say(el('msOne'), '', '');
+    show(el('oneDetail'), false);
+
+    if (!q) { say(el('msOne'), 'err', 'พิมพ์ชื่อ เบอร์ หรือรหัสสมาชิกก่อนนะครับ'); return; }
+    el('oneList').innerHTML = '<div class="empty">กำลังค้นหา...</div>';
+
+    F.auth('adminMembers', { q: q, limit: 40 }).then(function (r) {
+      if (!r.members.length) { el('oneList').innerHTML = '<div class="empty">ไม่พบสมาชิกที่ตรงกับคำค้นนี้</div>'; return; }
+
+      // เจอคนเดียว -> เปิดรายละเอียดให้เลย ไม่ต้องกดซ้ำ
+      if (r.members.length === 1) { el('oneList').innerHTML = ''; openOne(r.members[0].member_id); return; }
+
+      el('oneList').innerHTML =
+        '<p class="field-note">เจอ ' + r.members.length + ' คน — กดเลือกคนที่ต้องการดู</p>' +
+        r.members.map(function (m) {
+          return '<div class="row">' +
+            '<div class="row__main">' +
+              '<div class="row__title">' + esc(m.name) + '</div>' +
+              '<div class="row__sub">' + esc(m.member_id) +
+                (m.phone ? ' · ' + esc(m.phone) : ' · ยังไม่มีเบอร์') +
+                (m.status === 'Admin' ? ' · แอดมิน' : '') + '</div>' +
+            '</div>' +
+            '<button class="btn btn--sm" data-one="' + esc(m.member_id) + '">ดูข้อมูล</button>' +
+          '</div>';
+        }).join('');
+
+      el('oneList').querySelectorAll('[data-one]').forEach(function (b) {
+        b.onclick = function () { openOne(b.dataset.one); };
+      });
+    }).catch(function (err) {
+      el('oneList').innerHTML = '<div class="note note--err">' + esc(err.message) + '</div>';
+    });
+  }
+
+  function statusText(m) {
+    if (!m.phone)            return ['wait', 'ยังไม่มีเบอร์ — เข้าระบบไม่ได้'];
+    if (m.must === 'FALSE')  return ['ok',   'พร้อมใช้งาน'];
+    return ['wait', 'รอเจ้าตัวตั้งรหัสเอง'];
+  }
+
+  function openOne(memberId) {
+    say(el('msOne'), '', '');
+    el('oneDetail').innerHTML = '<div class="empty">กำลังโหลด...</div>';
+    show(el('oneDetail'), true);
+
+    F.auth('adminMemberDetail', { member_id: memberId }).then(function (r) {
+      var m = r.member, st = statusText(m);
+
+      var head =
+        '<div class="one__head">' +
+          (m.pic ? '<img class="one__pic" src="' + esc(m.pic) + '" alt="">'
+                 : '<div class="one__pic one__pic--empty">' + esc((m.name || '?').charAt(0)) + '</div>') +
+          '<div>' +
+            '<div class="one__name">' + esc(m.name) +
+              ' <span class="badge badge--' + st[0] + '">' + esc(st[1]) + '</span></div>' +
+            '<div class="row__sub">' + esc(m.member_id) +
+              (m.status === 'Admin' ? ' · แอดมิน' : ' · สมาชิก') + '</div>' +
+          '</div>' +
+        '</div>';
+
+      var info = [
+        ['เบอร์โทร (ใช้เข้าระบบ)', m.phone || '— ยังไม่มี —'],
+        ['ชื่อเดิมจากระบบเก่า',     m.old_user || '—'],
+        ['เข้าระบบล่าสุด',          m.last_login || 'ยังไม่เคยเข้า'],
+        ['เพิ่มเข้าระบบเมื่อ',       m.created_at || '—'],
+        ['ผลงานทั้งหมด',            r.file_count + ' ไฟล์ จาก ' + r.event_count + ' กิจกรรม']
+      ].map(function (it) {
+        return '<div class="one__row"><span>' + it[0] + '</span><b>' + esc(String(it[1])) + '</b></div>';
+      }).join('');
+
+      var works = !r.events.length
+        ? '<div class="empty">ยังไม่มีผลงานในระบบ</div>'
+        : r.events.map(function (e) {
+            return '<div class="one__ev">' +
+              '<div class="one__evname">' + esc(e.event_name) +
+                (e.event_date ? ' · ' + esc(e.event_date) : '') +
+                ' <span class="one__count">' + e.files.length + ' ไฟล์</span></div>' +
+              '<div class="shots">' + e.files.map(function (f) {
+                return '<div class="shot">' +
+                  '<img src="' + esc(f.thumb) + '" alt="' + esc(f.name) + '" loading="lazy">' +
+                  '<div class="shot__act"><a href="' + esc(F.viewUrl(f.file_id, f.url)) +
+                    '" target="_blank" rel="noopener">ดูไฟล์</a></div>' +
+                '</div>';
+              }).join('') + '</div>' +
+            '</div>';
+          }).join('');
+
+      el('oneDetail').innerHTML =
+        '<div class="card card--inner">' + head +
+          '<div class="one__info">' + info + '</div>' +
+          '<h3 class="one__h3">ผลงาน</h3>' + works +
+          '<div class="btn-row" style="margin-top:14px">' +
+            '<button class="btn btn--plain btn--sm" id="btOneClose">ปิด</button>' +
+          '</div>' +
+        '</div>';
+
+      el('btOneClose').onclick = function () {
+        show(el('oneDetail'), false);
+        el('oneDetail').innerHTML = '';
+      };
+      el('oneDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }).catch(function (err) {
+      el('oneDetail').innerHTML = '<div class="note note--err">' +
+        esc(/ไม่รู้จักคำสั่ง/.test(err.message)
+            ? 'หลังบ้านยังไม่ได้อัปเดต — วาง Code.gs ใหม่ใน Apps Script แล้ว deploy เวอร์ชันใหม่ก่อนนะครับ'
+            : err.message) + '</div>';
+    });
+  }
+
   // ---------------- ผูกปุ่ม ----------------
   function bind() {
     el('btLogin').onclick = doLogin;
@@ -345,6 +459,8 @@
     el('btUp').onclick      = doUpload;
     el('btUpClear').onclick = clearPick;
     el('btMemQ').onclick    = function () { doMemQuery(); };
+    el('btFindOne').onclick  = doFindOne;
+    el('inFindOne').onkeydown = function (e) { if (e.key === 'Enter') doFindOne(); };
     el('inMemQ').onkeydown  = function (e) { if (e.key === 'Enter') doMemQuery(); };
 
     el('btAddMem').onclick    = doAddMember;
