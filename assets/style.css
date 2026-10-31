@@ -587,9 +587,12 @@ textarea { min-height: 72px; resize: vertical; }
   background: var(--cb, var(--gold-bg));
   overflow: hidden;
 }
+/* contain ไม่ใช่ cover — ผลงานส่วนใหญ่เป็นเกียรติบัตร/ใบประกาศแนวตั้ง
+   ถ้า crop จะตัดหัวตัดท้าย ดูไม่ออกว่าใบไหน ยอมให้มีขอบว่างดีกว่าเนื้อหาหาย */
 .shot__pic img {
   display: block; width: 100%; height: 100%;
-  object-fit: cover; cursor: zoom-in;
+  object-fit: contain; cursor: zoom-in;
+  padding: 4px;
 }
 /* ปุ่มขยายมุมขวาบน — แตะที่รูปก็เปิดได้เหมือนกัน ปุ่มนี้ไว้บอกให้รู้ว่ากดได้ */
 .shot__zoom {
@@ -622,4 +625,4 @@ textarea { min-height: 72px; resize: vertical; }
 }
 @media (min-width: 520px) { .shots { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .shots { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-.shots .shot img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--gold-bg); }
+.shots .shot img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; padding: 4px; background: var(--gold-bg); }
