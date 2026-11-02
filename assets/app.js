@@ -317,6 +317,9 @@
 
     F.busy(true, ['กำลังบันทึก...']);
     F.auth('changePassword', { oldPassword: old, newPassword: p1 }).then(function (r) {
+      // หลังบ้านผูกเซสชันไว้กับรหัสปัจจุบัน พอเปลี่ยนรหัสต้องรับบัตรผ่านใบใหม่มาเก็บ
+      // ไม่งั้นเครื่องตัวเองจะโดนเตะออกทันทีที่กดบันทึก
+      if (r.token) F.setToken(r.token);
       openPass(false);
       say(el('msChange'), 'ok', r.msg);
     }).catch(function (err) {
