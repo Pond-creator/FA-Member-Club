@@ -150,13 +150,38 @@
           '<h2 class="news__title">' + esc(n.title) + '</h2>' +
           (n.date ? '<div class="news__date">' + esc(n.date) + '</div>' : '') +
         '</div>' +
-        (n.body ? '<div class="news__body">' + textHtml(n.body) + '</div>' : '') +
+        // รูปอยู่บนข้อความ — เห็นภาพก่อนแล้วค่อยอ่าน เหมือนโพสต์ทั่วไป
         (pics ? '<div class="npics" data-n="' + Math.min(n.pics.length, 2) + '">' + pics + '</div>' : '') +
+        (n.body ? '<div class="news__body is-clamp">' + textHtml(n.body) + '</div>' +
+                  '<button class="news__more hide">ดูเพิ่มเติม</button>' : '') +
       '</article>';
     }).join('');
 
     box.querySelectorAll('[data-zoom]').forEach(function (b) {
       b.onclick = function () { lbOpen(Number(b.dataset.zoom), NEWSFLAT); };
+    });
+
+    clampNews();
+    // ฟอนต์โหลดทีหลังทำให้ความสูงเปลี่ยน -> วัดซ้ำ ไม่งั้นปุ่มโผล่/ไม่โผล่ผิด
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(clampNews);
+  }
+
+  /** ข่าวยาวๆ ย่อไว้ 5 บรรทัดก่อน แล้วให้กดดูเต็ม — ปุ่มโผล่เฉพาะข่าวที่ยาวจริง */
+  function clampNews() {
+    el('newsList').querySelectorAll('.news__body').forEach(function (b) {
+      var btn = b.nextElementSibling;
+      if (!btn || btn.className.indexOf('news__more') < 0) return;
+
+      var over = b.scrollHeight - b.clientHeight > 4;
+      if (!over && b.classList.contains('is-clamp')) { show(btn, false); return; }
+      if (btn.dataset.ready === '1') return;        // ผูกปุ่มไปแล้ว ไม่ต้องผูกซ้ำ
+
+      btn.dataset.ready = '1';
+      show(btn, true);
+      btn.onclick = function () {
+        var clamped = b.classList.toggle('is-clamp');
+        btn.textContent = clamped ? 'ดูเพิ่มเติม' : 'ย่อลง';
+      };
     });
   }
 

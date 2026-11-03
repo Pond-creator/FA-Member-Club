@@ -735,9 +735,23 @@ textarea { min-height: 72px; resize: vertical; }
 .news__body {
   white-space: pre-line;          /* ขึ้นบรรทัดตามที่แอดมินพิมพ์ ไม่ต้องแปลงเป็น <br> */
   font-size: 14.5px; line-height: 1.7;
-  margin-bottom: 14px; word-break: break-word;
+  margin-top: 14px; word-break: break-word;
 }
 .news__body a { color: var(--gold); }
+
+/* ย่อไว้ 5 บรรทัด — ข่าวกติกายาวเป็นหน้า ถ้าปล่อยเต็มจะเลื่อนหารูปไม่เจอ */
+.news__body.is-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news__more {
+  margin-top: 6px; padding: 6px 0;
+  font: inherit; font-size: 13.5px; font-weight: 700;
+  color: var(--gold); background: none; border: 0; cursor: pointer;
+}
+.news__more:hover { text-decoration: underline; }
 
 /* รูปเดียว = เต็มความกว้าง · หลายรูป = 2 ช่องบนมือถือ, 3 ช่องบนจอใหญ่ */
 .npics { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -755,9 +769,16 @@ textarea { min-height: 72px; resize: vertical; }
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .npic:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.10); }
-/* สัดส่วนอยู่ที่กรอบ ไม่ใช่ที่รูป -> รูปยังไม่โหลดกรอบก็ไม่ยุบ หน้าไม่กระตุก */
-.npic img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
-.npics[data-n="1"] .npic img { aspect-ratio: 16 / 10; }
+/* รูปเดียว = ปล่อยตามสัดส่วนจริงของรูป ไม่ครอปอะไรทิ้งเลย
+   โปสเตอร์ประกาศส่วนใหญ่เป็นแนวตั้ง/จัตุรัส ถ้าบังคับสัดส่วนจะตัดหัวตัดท้าย อ่านไม่ออก */
+.npics[data-n="1"] .npic img { display: block; width: 100%; height: auto; }
+
+/* หลายรูป = ช่องจัตุรัสเท่ากันหมดให้เป็นระเบียบ แต่ใช้ contain รูปจึงยังเห็นครบทั้งใบ */
+.npics[data-n="2"] .npic img {
+  display: block; width: 100%;
+  aspect-ratio: 1; object-fit: contain;
+  background: var(--gold-bg);
+}
 
 /* ช่องติ๊กในฟอร์มลงข่าว */
 .chk {
