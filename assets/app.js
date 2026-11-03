@@ -528,8 +528,10 @@
       t.onclick = function () {
         document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('is-on'); });
         t.classList.add('is-on');
-        show(el('paneWork'), t.dataset.pane === 'paneWork');
-        show(el('paneMe'),   t.dataset.pane === 'paneMe');
+        // วนทุกแท็บ ไม่เขียนทีละอัน -> เพิ่มแท็บใหม่แล้วไม่ลืมแก้ตรงนี้อีก
+        ['paneNews', 'paneWork', 'paneMe'].forEach(function (p) {
+          show(el(p), p === t.dataset.pane);
+        });
         window.scrollTo(0, 0);
       };
     });
