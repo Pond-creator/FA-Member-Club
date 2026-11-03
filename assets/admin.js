@@ -280,13 +280,17 @@
             btn   = '<button class="btn btn--ghost btn--sm" data-phone="' + esc(m.member_id) +
                     '" data-name="' + esc(m.name) + '">แก้เบอร์</button>';
           }
+          // ปุ่มลบเป็นตัวหนังสือเล็กๆ ไม่ใช่ปุ่มเต็ม — กันกดพลาด เพราะลบแล้วเอาคืนไม่ได้
+          var del = '<button class="linkx" data-del="' + esc(m.member_id) +
+                    '" data-name="' + esc(m.name) + '" title="ลบออกจากระบบ">ลบ</button>';
+
           return '<div class="row">' +
             '<div class="row__main">' +
               '<div class="row__title">' + esc(m.name) + ' ' + badge + '</div>' +
               '<div class="row__sub">' + esc(m.member_id) +
                 (m.phone ? ' · ' + esc(m.phone) : ' · ยังเข้าระบบไม่ได้') +
                 (m.status === 'Admin' ? ' · แอดมิน' : '') + '</div>' +
-            '</div>' + btn +
+            '</div>' + btn + del +
           '</div>';
         }).join('');
 
@@ -306,6 +310,24 @@
             doMemQuery(true);
           }).catch(function (err) {
             say(el('msMem'), 'err', err.message);
+          }).then(function () { F.busy(false); });
+        };
+      });
+
+      // ---- ลบสมาชิก (หลังบ้านกันไว้อีกชั้น: ลบตัวเอง / แอดมินคนสุดท้าย / คนที่มีผลงาน ลบไม่ได้) ----
+      el('memList').querySelectorAll('[data-del]').forEach(function (b) {
+        b.onclick = function () {
+          if (!window.confirm('ลบ ' + b.dataset.name + ' ออกจากระบบ?\n\n' +
+                              'ลบแล้วเอาคืนไม่ได้ ต้องเพิ่มใหม่เอง\n' +
+                              'ถ้าคนนี้มีผลงานอยู่ ระบบจะไม่ยอมให้ลบ')) return;
+          F.busy(true, ['กำลังลบ...']);
+          F.auth('adminDeleteMember', { member_id: b.dataset.del }).then(function (r) {
+            say(el('msMem'), 'ok', r.msg);
+            el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            doMemQuery(true);
+          }).catch(function (err) {
+            say(el('msMem'), 'err', err.message);
+            el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }).then(function () { F.busy(false); });
         };
       });

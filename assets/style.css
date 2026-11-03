@@ -671,3 +671,13 @@ textarea { min-height: 72px; resize: vertical; }
 .memsum__i.is-ok   { background: #eef6f0; border-color: #cfe4d6; color: var(--ok); }
 .memsum__i.is-wait { background: #fdf8ea; border-color: #e8d9a8; color: #8a6d14; }
 .memsum__i.is-none { background: #fdf4f2; border-color: #eed6cf; color: var(--danger); }
+
+/* ปุ่มลบในรายชื่อสมาชิก — ตั้งใจทำให้ไม่เด่น กดยากกว่าปุ่มอื่นนิดหน่อย กันกดพลาด */
+.linkx {
+  flex: none; margin-left: 10px; padding: 6px 8px;
+  font: inherit; font-size: 12.5px;
+  color: var(--ink-soft); background: none;
+  border: 0; border-bottom: 1px solid transparent;
+  cursor: pointer;
+}
+.linkx:hover { color: var(--danger, #b3261e); border-bottom-color: currentColor; }
