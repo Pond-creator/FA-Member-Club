@@ -180,6 +180,21 @@
           <option value="Admin">แอดมิน (Admin)</option>
         </select>
 
+        <!-- แนบผลงานไปพร้อมกันเลย — คนมาสมัครพร้อมส่งงานในคราวเดียว จะได้ไม่ต้องไปอีกแท็บ -->
+        <details id="dtNewWork" class="fold">
+          <summary class="fold__sum">แนบผลงานไปด้วยเลย (ถ้ามี)</summary>
+          <div class="fold__in">
+            <label for="selNewEv">กิจกรรม</label>
+            <select id="selNewEv"></select>
+
+            <label for="fileNewWork">ไฟล์ผลงาน (เลือกได้หลายไฟล์)</label>
+            <input id="fileNewWork" type="file" accept="image/jpeg,image/png" multiple>
+            <p class="field-note" style="margin:8px 0 0">
+              ไม่มีผลงานตอนนี้ก็ข้ามได้ ค่อยไปแนบทีหลังที่แท็บ <b>อัปโหลดให้สมาชิก</b>
+            </p>
+          </div>
+        </details>
+
         <div class="btn-row">
           <button id="btAddMem" class="btn">เพิ่มสมาชิก</button>
         </div>

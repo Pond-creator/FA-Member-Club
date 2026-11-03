@@ -94,12 +94,15 @@
 
   function paintEventOptions() {
     var open = events.filter(function (e) { return e.is_open; });
-    el('selEv').innerHTML = open.length
+    var html = open.length
       ? open.map(function (e) {
           return '<option value="' + esc(e.event_id) + '">' +
                  esc(e.event_name) + ' (' + esc(e.event_id) + ')</option>';
         }).join('')
       : '<option value="">— ยังไม่มีกิจกรรมที่เปิด —</option>';
+
+    el('selEv').innerHTML = html;
+    el('selNewEv').innerHTML = html;      // ช่องแนบผลงานตอนเพิ่มสมาชิกใหม่ ใช้รายการเดียวกัน
   }
 
   function doNewEvent() {
@@ -223,16 +226,54 @@
     if (!name)                       { say(el('msAdd'), 'err', 'ใส่ชื่อ-นามสกุลก่อนนะครับ'); return; }
     if (!/^0[0-9]{9}$/.test(phone))  { say(el('msAdd'), 'err', 'เบอร์โทรต้องเป็นเลข 10 หลัก เริ่มด้วย 0'); return; }
 
+    var files   = Array.prototype.slice.call(el('fileNewWork').files || []);
+    var eventId = el('selNewEv').value;
+    if (files.length && !eventId) {
+      say(el('msAdd'), 'err', 'เลือกกิจกรรมของผลงานก่อนนะครับ (หรือเอาไฟล์ออกถ้ายังไม่แนบ)');
+      return;
+    }
+
     F.busy(true, ['กำลังเพิ่มสมาชิก...']);
     F.auth('adminAddMember', { name: name, phone: phone, status: el('selNewRole').value })
       .then(function (r) {
         el('inNewName').value = ''; el('inNewPhone').value = '';
         el('selNewRole').value = 'User';
-        say(el('msAdd'), 'ok', r.msg);
-        doMemQuery();
+        // สมาชิกถูกสร้างแล้วแน่นอน ถ้าอัปรูปพลาดทีหลังก็ไปแนบเพิ่มที่แท็บอัปโหลดได้ ไม่ต้องสร้างซ้ำ
+        if (!files.length) { say(el('msAdd'), 'ok', r.msg); doMemQuery(); return; }
+        return uploadFor(r, eventId, files);
       })
       .catch(function (err) { say(el('msAdd'), 'err', err.message); })
       .then(function () { F.busy(false); });
+  }
+
+  /** อัปผลงานให้สมาชิกที่เพิ่งสร้าง — ทีละไฟล์ ไม่ยิงพร้อมกัน กันเลขลำดับชนกัน */
+  function uploadFor(r, eventId, files) {
+    var done = 0, fail = 0;
+    var chain = Promise.resolve();
+
+    files.forEach(function (file, idx) {
+      chain = chain.then(function () {
+        F.busy(true, ['กำลังอัปโหลดผลงาน ' + (idx + 1) + '/' + files.length + '...']);
+        return F.shrink(file, 1600).then(function (img) {
+          return F.auth('adminUploadFile', {
+            event_id:  eventId,
+            member_id: r.member_id,
+            data:      img.data,
+            mimeType:  img.mimeType
+          });
+        }).then(function () { done++; }).catch(function () { fail++; });
+      });
+    });
+
+    return chain.then(function () {
+      el('fileNewWork').value = '';
+      el('dtNewWork').open = false;
+      say(el('msAdd'), fail ? 'err' : 'ok', r.msg +
+        (fail ? '\nแนบผลงานสำเร็จ ' + done + ' ไฟล์ · ไม่สำเร็จ ' + fail +
+                ' ไฟล์ — ไปแนบเพิ่มได้ที่แท็บ "อัปโหลดให้สมาชิก"'
+              : '\nแนบผลงานให้แล้ว ' + done + ' ไฟล์'));
+      doMemQuery();
+    });
   }
 
   // ---------------- จัดการสมาชิก ----------------

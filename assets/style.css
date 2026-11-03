@@ -837,3 +837,25 @@ textarea { min-height: 72px; resize: vertical; }
 .shop__name { flex: 1; min-width: 0; }
 .shop__name b { display: block; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
 .shop__go   { flex: none; font-size: 20px; color: var(--ink-soft); line-height: 1; }
+
+/* ---------- ส่วนพับเก็บได้ (แนบผลงานตอนเพิ่มสมาชิก) ---------- */
+/* พับไว้ก่อนเพราะส่วนใหญ่ไม่ได้แนบผลงานพร้อมสมัคร ฟอร์มจะได้ไม่ยาวโดยไม่จำเป็น */
+.fold {
+  margin-top: 16px;
+  border: 1px solid var(--gold-soft); border-radius: 12px;
+  background: var(--gold-bg);
+}
+.fold__sum {
+  padding: 12px 14px; cursor: pointer;
+  font-size: 14px; font-weight: 700; color: var(--gold);
+  list-style: none;
+}
+.fold__sum::-webkit-details-marker { display: none; }
+.fold__sum::before {
+  content: '+'; display: inline-block; width: 18px;
+  font-size: 16px; font-weight: 700;
+}
+.fold[open] .fold__sum::before { content: '−'; }
+.fold__in { padding: 0 14px 14px; }
+.fold__in label { margin-top: 10px; }
+.fold__in label:first-child { margin-top: 0; }
