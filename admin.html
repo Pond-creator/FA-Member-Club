@@ -186,6 +186,26 @@
   </section>
 </main>
 
+<!-- กล่องถาม-ตอบกลางจอ — ใช้แทน window.confirm / window.prompt (ดู ask() ใน admin.js) -->
+<div id="mdAsk" class="modal modal--mid hide">
+  <div class="modal__box modal__box--sm">
+    <h2 id="askTitle" class="modal__title"></h2>
+    <p id="askBody" class="card__hint hide"></p>
+
+    <div id="askField" class="hide">
+      <label id="askLabel" for="askInput"></label>
+      <input id="askInput" type="text" autocomplete="off">
+    </div>
+
+    <div id="askNote" class="note note--info hide"></div>
+
+    <div class="btn-row btn-row--end">
+      <button id="askNo" class="btn btn--plain btn--sm">ยกเลิก</button>
+      <button id="askYes" class="btn btn--sm">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
 <script src="assets/api.js"></script>
 <script src="assets/admin.js"></script>
 </body>

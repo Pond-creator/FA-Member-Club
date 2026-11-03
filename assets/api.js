@@ -79,6 +79,9 @@
     veil.querySelector('.veil__bar > i').style.width = pct + '%';
   }
 
+  var MIN_BUSY_MS = 500;   // เวลาน้อยสุดที่ตัวหมุนต้องอยู่บนจอ
+  var shownAt = 0;
+
   function busy(on, steps) {
     if (on) {
       if (!veil) {
@@ -98,7 +101,7 @@
       txt.textContent = list[0];
 
       // ถ้าเรียกซ้ำระหว่างที่ยังโหลดอยู่ (เช่นอัปโหลดหลายไฟล์) ไม่ต้องรีเซ็ต % กลับไป 0
-      if (veil.dataset.run !== '1') { pct = 0; paintPct(); }
+      if (veil.dataset.run !== '1') { pct = 0; paintPct(); shownAt = Date.now(); }
       veil.dataset.run = '1';
 
       var i = 0;
@@ -119,8 +122,15 @@
       clearInterval(txtTimer);
       clearInterval(pctTimer);
       veil.dataset.run = '0';
-      pct = 100; paintPct();          // ให้เห็น 100% แวบนึงก่อนปิด
-      hideTimer = setTimeout(function () { veil.classList.add('hide'); }, 220);
+
+      // งานที่เสร็จเร็วมาก (เช่นลบสมาชิก) ตัวหมุนจะวาบเดียวจนไม่รู้ว่ากดติดไหม
+      // -> ค้างไว้ให้ครบ MIN_BUSY_MS ก่อน แล้วค่อยวิ่ง 100% แล้วปิด
+      var wait = Math.max(0, MIN_BUSY_MS - (Date.now() - shownAt));
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () {
+        pct = 100; paintPct();        // ให้เห็น 100% แวบนึงก่อนปิด
+        hideTimer = setTimeout(function () { veil.classList.add('hide'); }, 220);
+      }, wait);
     }
   }
 

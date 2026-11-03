@@ -681,3 +681,21 @@ textarea { min-height: 72px; resize: vertical; }
   cursor: pointer;
 }
 .linkx:hover { color: var(--danger, #b3261e); border-bottom-color: currentColor; }
+
+/* ---------- กล่องถาม-ตอบกลางจอ (แทน window.confirm) ---------- */
+/* ถามแบบสั้นๆ ควรอยู่กลางจอทุกขนาดหน้าจอ ไม่ใช่เด้งจากขอบล่างเหมือนป็อบอัพเนื้อหายาว */
+.modal--mid { align-items: center; padding: 20px; }
+.modal--mid .modal__box {
+  border-radius: 16px;
+  padding: 22px 20px 20px;
+  animation: pop .16s ease-out;
+}
+@keyframes pop { from { transform: scale(.96); opacity: .5; } }
+
+.modal__box--sm { max-width: 380px; }
+.modal__box--sm .modal__title { margin-bottom: 10px; }
+.modal__box--sm .card__hint { margin: 0; }
+.modal__box--sm label { margin-top: 14px; }
+
+.btn-row--end { justify-content: flex-end; }
+.btn-row--end .btn { flex: 0 0 auto; }

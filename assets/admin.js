@@ -256,6 +256,57 @@
 
   // keepMsg = true -> ไม่ล้างข้อความผลด้านบน (ใช้ตอนโหลดรายชื่อใหม่หลังใส่เบอร์/เปิดสิทธิ์
   //                   ไม่งั้นข้อความ "บอกเจ้าตัวว่า..." จะหายทันทีก่อนแอดมินได้อ่าน)
+  /**
+   * กล่องถาม-ตอบกลางจอ — ใช้แทน window.confirm / window.prompt ของเบราว์เซอร์
+   * คืน Promise : กดยกเลิก -> false · กดยืนยัน -> true (หรือข้อความที่พิมพ์ ถ้าใส่ opt.input)
+   * body กับ note รับ HTML ได้ (ใช้ <br> ขึ้นบรรทัดใหม่)
+   */
+  function ask(opt) {
+    return new Promise(function (resolve) {
+      var box = el('mdAsk'), inp = el('askInput'), yes = el('askYes');
+      var done = false;
+
+      el('askTitle').textContent = opt.title || 'ยืนยัน';
+      el('askBody').innerHTML    = opt.body || '';
+      show(el('askBody'), !!opt.body);
+      el('askNote').innerHTML    = opt.note || '';
+      show(el('askNote'), !!opt.note);
+
+      show(el('askField'), !!opt.input);
+      if (opt.input) {
+        el('askLabel').textContent = opt.input.label || '';
+        inp.value       = opt.input.value || '';
+        inp.placeholder = opt.input.placeholder || '';
+        inp.inputMode   = opt.input.inputmode || 'text';
+        inp.maxLength   = opt.input.maxlength || 200;
+      }
+
+      yes.textContent = opt.yes || 'ยืนยัน';
+      yes.className   = 'btn btn--sm' + (opt.danger ? ' btn--danger' : '');
+
+      show(box, true);
+      setTimeout(function () { (opt.input ? inp : yes).focus(); }, 30);
+
+      function close(val) {
+        if (done) return;                        // กัน resolve ซ้ำ (กดยืนยันแล้วกด Esc ตาม)
+        done = true;
+        document.removeEventListener('keydown', onKey);
+        show(box, false);
+        resolve(val);
+      }
+      function okNow() { close(opt.input ? String(inp.value).trim() : true); }
+      function onKey(e) {
+        if (e.key === 'Escape') close(false);
+        else if (e.key === 'Enter' && opt.input && document.activeElement === inp) okNow();
+      }
+
+      yes.onclick         = okNow;
+      el('askNo').onclick = function () { close(false); };
+      box.onclick         = function (e) { if (e.target === box) close(false); };
+      document.addEventListener('keydown', onKey);
+    });
+  }
+
   function doMemQuery(keepMsg) {
     el('memList').innerHTML = '<div class="empty">กำลังโหลด...</div>';
     if (keepMsg !== true) say(el('msMem'), '', '');
@@ -297,55 +348,75 @@
       // ---- ใส่ / แก้เบอร์ ----
       el('memList').querySelectorAll('[data-phone]').forEach(function (b) {
         b.onclick = function () {
-          var ph = window.prompt('ใส่เบอร์โทรของ ' + b.dataset.name + ' (10 หลัก)\n\n' +
-                                 'ใส่แล้วเจ้าตัวจะไปตั้งรหัสเองได้ที่หน้าเข้าสู่ระบบ', '');
-          if (ph === null) return;
-          ph = String(ph).replace(/[^0-9]/g, '');
-          if (!/^0[0-9]{9}$/.test(ph)) { say(el('msMem'), 'err', 'เบอร์ต้องเป็นเลข 10 หลัก เริ่มด้วย 0'); return; }
+          ask({
+            title: 'ใส่เบอร์โทรให้ ' + b.dataset.name,
+            body:  'ใส่แล้วเจ้าตัวจะไปตั้งรหัสเองได้ที่หน้าเข้าสู่ระบบ',
+            yes:   'บันทึกเบอร์',
+            input: { label: 'เบอร์โทร (10 หลัก)', placeholder: '0812345678',
+                     inputmode: 'numeric', maxlength: 10 }
+          }).then(function (v) {
+            if (v === false) return;
+            var ph = String(v).replace(/[^0-9]/g, '');
+            if (!/^0[0-9]{9}$/.test(ph)) {
+              say(el('msMem'), 'err', 'เบอร์ต้องเป็นเลข 10 หลัก เริ่มด้วย 0'); return;
+            }
 
-          F.busy(true, ['กำลังบันทึกเบอร์...']);
-          F.auth('adminSetPhone', { member_id: b.dataset.phone, phone: ph }).then(function (r) {
-            say(el('msMem'), 'ok', r.msg);
-            el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            doMemQuery(true);
-          }).catch(function (err) {
-            say(el('msMem'), 'err', err.message);
-          }).then(function () { F.busy(false); });
+            F.busy(true, ['กำลังบันทึกเบอร์...']);
+            F.auth('adminSetPhone', { member_id: b.dataset.phone, phone: ph }).then(function (r) {
+              say(el('msMem'), 'ok', r.msg);
+              el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              doMemQuery(true);
+            }).catch(function (err) {
+              say(el('msMem'), 'err', err.message);
+            }).then(function () { F.busy(false); });
+          });
         };
       });
 
       // ---- ลบสมาชิก (หลังบ้านกันไว้อีกชั้น: ลบตัวเอง / แอดมินคนสุดท้าย / คนที่มีผลงาน ลบไม่ได้) ----
       el('memList').querySelectorAll('[data-del]').forEach(function (b) {
         b.onclick = function () {
-          if (!window.confirm('ลบ ' + b.dataset.name + ' ออกจากระบบ?\n\n' +
-                              'ลบแล้วเอาคืนไม่ได้ ต้องเพิ่มใหม่เอง\n' +
-                              'ถ้าคนนี้มีผลงานอยู่ ระบบจะไม่ยอมให้ลบ')) return;
-          F.busy(true, ['กำลังลบ...']);
-          F.auth('adminDeleteMember', { member_id: b.dataset.del }).then(function (r) {
-            say(el('msMem'), 'ok', r.msg);
-            el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            doMemQuery(true);
-          }).catch(function (err) {
-            say(el('msMem'), 'err', err.message);
-            el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }).then(function () { F.busy(false); });
+          ask({
+            title:  'ลบ ' + b.dataset.name + ' ออกจากระบบ?',
+            body:   'ลบแล้วเอาคืนไม่ได้ ถ้าจะใช้อีกต้องเพิ่มเข้าไปใหม่',
+            note:   'ถ้าคนนี้มีผลงานอยู่ ระบบจะไม่ยอมให้ลบ',
+            yes:    'ลบออกจากระบบ',
+            danger: true
+          }).then(function (yn) {
+            if (!yn) return;
+            F.busy(true, ['กำลังลบ...']);
+            return F.auth('adminDeleteMember', { member_id: b.dataset.del }).then(function (r) {
+              say(el('msMem'), 'ok', r.msg);
+              el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              doMemQuery(true);
+            }).catch(function (err) {
+              say(el('msMem'), 'err', err.message);
+              el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }).then(function () { F.busy(false); });
+          });
         };
       });
 
       // ---- เปิดสิทธิ์ให้ตั้งรหัสใหม่ (แอดมินไม่เห็นรหัสของสมาชิก) ----
       el('memList').querySelectorAll('[data-reset]').forEach(function (b) {
         b.onclick = function () {
-          if (!window.confirm('เปิดให้ ' + b.dataset.name + ' ตั้งรหัสใหม่?\n\n' +
-                              'รหัสเดิมจะใช้ไม่ได้ทันที\n' +
-                              'เจ้าตัวต้องไปที่หน้าเข้าสู่ระบบ กด "เข้าครั้งแรก / ตั้งรหัสใหม่" แล้วตั้งเอง')) return;
-          F.busy(true, ['กำลังเปิดสิทธิ์...']);
-          F.auth('adminResetPassword', { member_id: b.dataset.reset }).then(function (r) {
-            say(el('msMem'), 'ok', r.msg);
-            el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            doMemQuery(true);
-          }).catch(function (err) {
-            say(el('msMem'), 'err', err.message);
-          }).then(function () { F.busy(false); });
+          ask({
+            title: 'เปิดให้ ' + b.dataset.name + ' ตั้งรหัสใหม่?',
+            body:  'รหัสเดิมจะใช้ไม่ได้ทันที และเครื่องที่ค้างล็อกอินอยู่จะหลุดทั้งหมด',
+            note:  'บอกเจ้าตัวให้เข้าหน้าเว็บ กด <b>"เข้าครั้งแรก / ตั้งรหัสใหม่"</b> ' +
+                   'แล้วกรอกเบอร์ตัวเองเพื่อตั้งรหัสใหม่',
+            yes:   'เปิดสิทธิ์'
+          }).then(function (yn) {
+            if (!yn) return;
+            F.busy(true, ['กำลังเปิดสิทธิ์...']);
+            return F.auth('adminResetPassword', { member_id: b.dataset.reset }).then(function (r) {
+              say(el('msMem'), 'ok', r.msg);
+              el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              doMemQuery(true);
+            }).catch(function (err) {
+              say(el('msMem'), 'err', err.message);
+            }).then(function () { F.busy(false); });
+          });
         };
       });
     }).catch(function (err) {
