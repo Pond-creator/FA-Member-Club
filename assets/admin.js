@@ -327,6 +327,208 @@
 
   var memOnly = '';          // ป้ายสถานะที่กดกรองอยู่ ('' = ดูทุกคน)
 
+  // ================= ข่าวสาร =================
+  var nwEditId = '';      // '' = กำลังลงข่าวใหม่ · มีค่า = กำลังแก้ข่าวนี้อยู่
+  var nwCache  = [];      // ข่าวทั้งหมดที่โหลดมาล่าสุด ใช้ตอนกดแก้ไขโดยไม่ต้องยิงซ้ำ
+
+  function nwImg(id, w) {
+    return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + w;
+  }
+
+  /** ล้างฟอร์มกลับไปโหมด "ลงข่าวใหม่" */
+  function nwReset() {
+    nwEditId = '';
+    el('nwFormTitle').textContent = 'ลงข่าวใหม่';
+    el('inNwTitle').value = '';
+    el('inNwBody').value  = '';
+    el('inNwDate').value  = '';
+    el('ckNwPin').checked  = false;
+    el('ckNwShow').checked = true;
+    el('fileNw').value = '';
+    el('nwPics').innerHTML = '';
+    show(el('nwPicBox'), false);
+    show(el('btNwNew'), false);
+    say(el('msNwPic'), '', '');
+  }
+
+  /** เข้าโหมดแก้ไขข่าวที่เลือก */
+  function nwEdit(n) {
+    nwEditId = n.news_id;
+    el('nwFormTitle').textContent = 'แก้ไขข่าว ' + n.news_id;
+    el('inNwTitle').value = n.title;
+    el('inNwBody').value  = n.body;
+    el('inNwDate').value  = n.date || '';
+    el('ckNwPin').checked  = !!n.pinned;
+    el('ckNwShow').checked = n.show !== false;
+    show(el('btNwNew'), true);
+    nwPaintPics(n.pics || []);
+    show(el('nwPicBox'), true);
+    say(el('msNw'), '', '');
+    el('nwFormTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** รูปของข่าวที่กำลังแก้อยู่ — แต่ละรูปมีปุ่มลบมุมบนขวา */
+  function nwPaintPics(pics) {
+    var box = el('nwPics');
+    if (!pics.length) {
+      box.innerHTML = '<div class="empty" style="grid-column:1/-1">ยังไม่มีรูป</div>';
+      return;
+    }
+    box.innerHTML = pics.map(function (id) {
+      return '<div class="npic nwpic">' +
+        '<img src="' + esc(nwImg(id, 600)) + '" alt="" loading="lazy">' +
+        '<button class="nwpic__x" data-pic="' + esc(id) + '" title="ลบรูปนี้">&times;</button>' +
+      '</div>';
+    }).join('');
+
+    box.querySelectorAll('[data-pic]').forEach(function (b) {
+      b.onclick = function () {
+        ask({ title: 'ลบรูปนี้?', body: 'รูปจะถูกย้ายไปถังขยะใน Drive',
+              yes: 'ลบรูป', danger: true }).then(function (yn) {
+          if (!yn) return;
+          F.busy(true, ['กำลังลบรูป...']);
+          return F.auth('adminNewsDeletePic', { news_id: nwEditId, file_id: b.dataset.pic })
+            .then(function (r) {
+              nwPaintPics(r.pics || []);
+              say(el('msNwPic'), 'ok', r.msg);
+              loadNews(true);
+            }).catch(function (err) {
+              say(el('msNwPic'), 'err', err.message);
+            }).then(function () { F.busy(false); });
+        });
+      };
+    });
+  }
+
+  function doNwSave() {
+    var title = el('inNwTitle').value.trim();
+    say(el('msNw'), '', '');
+    if (!title) { say(el('msNw'), 'err', 'ใส่หัวข้อข่าวก่อนนะครับ'); return; }
+
+    F.busy(true, ['กำลังบันทึก...']);
+    F.auth('adminNewsSave', {
+      news_id: nwEditId,
+      title:   title,
+      body:    el('inNwBody').value,
+      date:    el('inNwDate').value.trim(),
+      pinned:  el('ckNwPin').checked  ? 'TRUE' : 'FALSE',
+      show:    el('ckNwShow').checked ? 'TRUE' : 'FALSE'
+    }).then(function (r) {
+      say(el('msNw'), 'ok', r.msg);
+      // ข่าวใหม่ -> เข้าโหมดแก้ไขต่อทันที จะได้แนบรูปได้เลยไม่ต้องกดหาใหม่
+      if (!nwEditId) {
+        nwEditId = r.news_id;
+        el('nwFormTitle').textContent = 'แก้ไขข่าว ' + r.news_id;
+        show(el('btNwNew'), true);
+        nwPaintPics([]);
+        show(el('nwPicBox'), true);
+      }
+      loadNews(true);
+    }).catch(function (err) {
+      say(el('msNw'), 'err', err.message);
+    }).then(function () { F.busy(false); });
+  }
+
+  function doNwUpload() {
+    var files = Array.prototype.slice.call(el('fileNw').files || []);
+    say(el('msNwPic'), '', '');
+    if (!nwEditId)     { say(el('msNwPic'), 'err', 'บันทึกข่าวก่อนแล้วค่อยแนบรูปนะครับ'); return; }
+    if (!files.length) return;
+
+    var done = 0, fail = [], last = [];
+    F.busy(true, ['กำลังอัปโหลด 1/' + files.length + '...']);
+
+    // ทีละไฟล์ ไม่ยิงพร้อมกัน เพราะต้องต่อ file id ท้ายช่องเดิม ชนกันไม่ได้
+    var chain = Promise.resolve();
+    files.forEach(function (file, idx) {
+      chain = chain.then(function () {
+        F.busy(true, ['กำลังอัปโหลด ' + (idx + 1) + '/' + files.length + '...']);
+        // ย่อที่ 2000px — ใหญ่พอให้จอคอมเห็นคมชัด แต่ไม่หนักจนอัปไม่ขึ้น
+        return F.shrink(file, 2000).then(function (img) {
+          return F.auth('adminNewsUpload', {
+            news_id:  nwEditId,
+            data:     img.data,
+            mimeType: img.mimeType
+          });
+        }).then(function (r) {
+          done++;
+          last = r.pics || [];
+        }).catch(function (err) {
+          fail.push(file.name + ' : ' + err.message);
+        });
+      });
+    });
+
+    chain.then(function () {
+      el('fileNw').value = '';
+      if (last.length) nwPaintPics(last);
+      if (fail.length) say(el('msNwPic'), 'err', 'สำเร็จ ' + done + ' รูป · ไม่สำเร็จ ' + fail.length + ' รูป');
+      else             say(el('msNwPic'), 'ok', 'แนบรูปเรียบร้อย ' + done + ' รูป');
+      loadNews(true);
+      F.busy(false);
+    });
+  }
+
+  /** keepForm = true -> ไม่ล้างฟอร์ม (ใช้ตอนโหลดรายการใหม่หลังบันทึก) */
+  function loadNews(keepForm) {
+    if (!keepForm) nwReset();
+    el('nwList').innerHTML = '<div class="empty">กำลังโหลด...</div>';
+
+    F.auth('adminNewsList').then(function (r) {
+      nwCache = r.news || [];
+      if (!nwCache.length) { el('nwList').innerHTML = '<div class="empty">ยังไม่มีข่าว</div>'; return; }
+
+      el('nwList').innerHTML = nwCache.map(function (n) {
+        return '<div class="row">' +
+          '<div class="row__main">' +
+            '<div class="row__title">' + esc(n.title) +
+              (n.pinned ? ' <span class="badge badge--ok">ปักหมุด</span>' : '') +
+              (n.show === false ? ' <span class="badge badge--off">ซ่อนอยู่</span>' : '') +
+            '</div>' +
+            '<div class="row__sub">' + esc(n.news_id) +
+              (n.date ? ' · ' + esc(n.date) : '') +
+              ' · รูป ' + n.pics.length + ' รูป</div>' +
+          '</div>' +
+          '<button class="btn btn--ghost btn--sm" data-nwedit="' + esc(n.news_id) + '">แก้ไข</button>' +
+          '<button class="linkx" data-nwdel="' + esc(n.news_id) +
+            '" data-name="' + esc(n.title) + '">ลบ</button>' +
+        '</div>';
+      }).join('');
+
+      el('nwList').querySelectorAll('[data-nwedit]').forEach(function (b) {
+        b.onclick = function () {
+          for (var i = 0; i < nwCache.length; i++) {
+            if (nwCache[i].news_id === b.dataset.nwedit) { nwEdit(nwCache[i]); return; }
+          }
+        };
+      });
+
+      el('nwList').querySelectorAll('[data-nwdel]').forEach(function (b) {
+        b.onclick = function () {
+          ask({
+            title:  'ลบข่าว "' + b.dataset.name + '"?',
+            body:   'ลบแล้วเอาคืนไม่ได้ รูปของข่าวนี้จะถูกย้ายไปถังขยะใน Drive ด้วย',
+            note:   'ถ้าแค่ไม่อยากให้สมาชิกเห็น ให้กดแก้ไขแล้วเอาติ๊ก "ให้สมาชิกเห็น" ออกแทน',
+            yes:    'ลบข่าว',
+            danger: true
+          }).then(function (yn) {
+            if (!yn) return;
+            F.busy(true, ['กำลังลบข่าว...']);
+            return F.auth('adminNewsDelete', { news_id: b.dataset.nwdel }).then(function (r) {
+              say(el('msNw'), 'ok', r.msg);
+              if (nwEditId === b.dataset.nwdel) nwReset();
+              loadNews(true);
+            }).catch(function (err) {
+              say(el('msNw'), 'err', err.message);
+            }).then(function () { F.busy(false); });
+          });
+        };
+      });
+    }).catch(function (err) {
+      el('nwList').innerHTML = '<div class="note note--err">' + esc(err.message) + '</div>';
+    });
+  }
+
   function doMemQuery(keepMsg) {
     el('memList').innerHTML = '<div class="empty">กำลังโหลด...</div>';
     if (keepMsg !== true) say(el('msMem'), '', '');
@@ -684,6 +886,9 @@
     el('btUp').onclick      = doUpload;
     el('btUpClear').onclick = clearPick;
     el('btMemQ').onclick    = function () { doMemQuery(); };
+    el('btNwSave').onclick   = doNwSave;
+    el('btNwNew').onclick    = function () { nwReset(); say(el('msNw'), '', ''); };
+    el('fileNw').onchange    = doNwUpload;
     el('btFindOne').onclick  = doFindOne;
     el('inFindOne').onkeydown = function (e) { if (e.key === 'Enter') doFindOne(); };
     el('inMemQ').onkeydown  = function (e) { if (e.key === 'Enter') doMemQuery(); };
@@ -696,10 +901,11 @@
       t.onclick = function () {
         document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('is-on'); });
         t.classList.add('is-on');
-        ['paneEv', 'paneUp', 'paneMem', 'paneStat'].forEach(function (p) {
+        ['paneEv', 'paneUp', 'paneMem', 'paneNews', 'paneStat'].forEach(function (p) {
           show(el(p), p === t.dataset.pane);
         });
         if (t.dataset.pane === 'paneStat') loadStats();
+        if (t.dataset.pane === 'paneNews' && !el('nwList').innerHTML) loadNews();
         if (t.dataset.pane === 'paneMem' && !el('memList').innerHTML) doMemQuery();
         window.scrollTo(0, 0);
       };

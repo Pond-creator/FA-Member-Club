@@ -57,7 +57,50 @@
       <button class="tab is-on" data-pane="paneEv">กิจกรรม</button>
       <button class="tab" data-pane="paneUp">อัปโหลดให้สมาชิก</button>
       <button class="tab" data-pane="paneMem">สมาชิก</button>
+      <button class="tab" data-pane="paneNews">ข่าวสาร</button>
       <button class="tab" data-pane="paneStat">ภาพรวม</button>
+    </div>
+
+    <!-- ---------- ข่าวสาร ---------- -->
+    <div id="paneNews" class="hide">
+      <div class="card">
+        <h2 id="nwFormTitle" class="card__title">ลงข่าวใหม่</h2>
+        <p class="card__hint">สมาชิกจะเห็นข่าวนี้เป็นหน้าแรกทันทีที่เข้าสู่ระบบ</p>
+
+        <label for="inNwTitle">หัวข้อ</label>
+        <input id="inNwTitle" type="text" placeholder="เช่น เปิดรับสมัครประกวดวาดรูป ปี 2569">
+
+        <label for="inNwBody">รายละเอียด (ไม่ใส่ก็ได้)</label>
+        <textarea id="inNwBody" rows="5" placeholder="พิมพ์ได้หลายบรรทัด วางลิงก์ก็กดได้"></textarea>
+
+        <label for="inNwDate">วันที่ (ไม่ใส่ก็ได้)</label>
+        <input id="inNwDate" type="text" inputmode="numeric" placeholder="เช่น 03/11/2569">
+
+        <div class="btn-row" style="margin-top:14px">
+          <label class="chk"><input id="ckNwPin" type="checkbox"> ปักหมุดไว้บนสุด</label>
+          <label class="chk"><input id="ckNwShow" type="checkbox" checked> ให้สมาชิกเห็น</label>
+        </div>
+
+        <div class="btn-row">
+          <button id="btNwSave" class="btn">บันทึกข่าว</button>
+          <button id="btNwNew" class="btn btn--plain btn--sm hide">ลงข่าวใหม่แทน</button>
+        </div>
+        <div id="msNw" class="note hide"></div>
+      </div>
+
+      <!-- แนบรูป : ทำได้หลังจากมีข่าวแล้วเท่านั้น -->
+      <div id="nwPicBox" class="card hide">
+        <h2 class="card__title">รูปของข่าวนี้</h2>
+        <p class="card__hint">เลือกได้ทีละหลายรูป · ระบบย่อรูปให้เองก่อนอัปโหลด</p>
+        <input id="fileNw" type="file" accept="image/jpeg,image/png" multiple>
+        <div id="nwPics" class="npics" data-n="2" style="margin-top:12px"></div>
+        <div id="msNwPic" class="note hide"></div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title">ข่าวทั้งหมด</h2>
+        <div id="nwList"></div>
+      </div>
     </div>
 
     <!-- ---------- กิจกรรม ---------- -->

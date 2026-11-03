@@ -100,12 +100,18 @@
   <section id="scApp" class="hide">
 
     <div class="tabs">
-      <button class="tab is-on" data-pane="paneWork">ผลงานของฉัน</button>
+      <button class="tab is-on" data-pane="paneNews">ข่าวสาร</button>
+      <button class="tab" data-pane="paneWork">ผลงานของฉัน</button>
       <button class="tab" data-pane="paneMe">โปรไฟล์</button>
     </div>
 
+    <!-- ข่าวสาร — หน้าแรกที่เห็นหลังเข้าสู่ระบบ -->
+    <div id="paneNews">
+      <div id="newsList"></div>
+    </div>
+
     <!-- ผลงาน -->
-    <div id="paneWork">
+    <div id="paneWork" class="hide">
       <div class="card card--tight" style="margin-top:16px">
         <p class="field-note" style="margin:0">
           รูปและไฟล์ที่แอดมินเตรียมไว้ให้คุณ — กด <b>บันทึก</b> เพื่อโหลดเก็บไว้ในเครื่อง

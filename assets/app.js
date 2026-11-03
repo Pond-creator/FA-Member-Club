@@ -85,12 +85,79 @@
   }
 
   // ---------------- ผลงานของฉัน ----------------
-  var FLAT = [];   // รูปทุกใบเรียงต่อกัน ใช้เลื่อนดูซ้าย-ขวาตอนเปิดเต็มจอ
+  var FLAT = [];       // รูปผลงานทุกใบเรียงต่อกัน ใช้เลื่อนดูซ้าย-ขวาตอนเปิดเต็มจอ
+  var NEWSFLAT = [];   // รูปข่าว — แยกกองกัน จะได้เลื่อนดูอยู่ในข่าวไม่ปนกับผลงาน
 
   /** คีย์เรียงกิจกรรม : แปลง dd/MM/yyyy เป็นตัวเลข yyyymmdd เทียบง่าย ไม่มีวันที่ = 0 */
   function evKey(ev) {
     var m = String(ev.event_date || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     return m ? (Number(m[3]) * 10000 + Number(m[2]) * 100 + Number(m[1])) : 0;
+  }
+
+  /**
+   * url รูปจาก Drive ตามความกว้างที่ขอ — ขอให้พอดีกับที่แสดงจริง
+   * มือถือจะได้โหลดไฟล์เล็ก ส่วนคอม/จอ retina ได้ไฟล์ใหญ่ที่คมชัด
+   */
+  function driveImg(id, w) {
+    return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + w;
+  }
+
+  /** srcset ให้เบราว์เซอร์เลือกขนาดเองตามความกว้างจริงบนจอ */
+  function driveSrcset(id) {
+    return [600, 1000, 1600, 2048]
+      .map(function (w) { return driveImg(id, w) + ' ' + w + 'w'; }).join(', ');
+  }
+
+  /** ข้อความธรรมดา -> HTML : คงการขึ้นบรรทัดไว้ด้วย CSS ส่วนลิงก์ทำให้กดได้ */
+  function textHtml(t) {
+    return esc(String(t || '')).replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noopener">$1</a>'
+    );
+  }
+
+  function paintNews(news) {
+    var box = el('newsList');
+    NEWSFLAT = [];
+
+    if (!news || !news.length) {
+      box.innerHTML = '<div class="card"><div class="empty">' +
+        'ยังไม่มีข่าวสารครับ<br><span class="field-note">' +
+        'เมื่อมีประกาศหรือภาพกิจกรรมใหม่ จะขึ้นที่หน้านี้</span></div></div>';
+      return;
+    }
+
+    box.innerHTML = news.map(function (n) {
+      // sizes ต้องตรงกับความกว้างจริงใน CSS ไม่งั้นเบราว์เซอร์เลือกไฟล์ผิดขนาด
+      var one = n.pics.length === 1;
+      var sz  = one ? '(min-width: 700px) 652px, calc(100vw - 32px)'
+                    : '(min-width: 700px) 320px, calc(50vw - 22px)';
+
+      var pics = n.pics.map(function (id) {
+        var i = NEWSFLAT.length;
+        NEWSFLAT.push({ f: { file_id: id, url: '' }, event: n.title });
+        return '<button class="npic" data-zoom="' + i + '" aria-label="ดูรูปเต็มจอ">' +
+          '<img src="' + esc(driveImg(id, 1000)) + '"' +
+            ' srcset="' + esc(driveSrcset(id)) + '"' +
+            ' sizes="' + sz + '"' +
+            ' alt="' + esc(n.title) + '" loading="lazy">' +
+        '</button>';
+      }).join('');
+
+      return '<article class="card news">' +
+        '<div class="news__head">' +
+          (n.pinned ? '<span class="news__pin">ปักหมุด</span>' : '') +
+          '<h2 class="news__title">' + esc(n.title) + '</h2>' +
+          (n.date ? '<div class="news__date">' + esc(n.date) + '</div>' : '') +
+        '</div>' +
+        (n.body ? '<div class="news__body">' + textHtml(n.body) + '</div>' : '') +
+        (pics ? '<div class="npics" data-n="' + Math.min(n.pics.length, 2) + '">' + pics + '</div>' : '') +
+      '</article>';
+    }).join('');
+
+    box.querySelectorAll('[data-zoom]').forEach(function (b) {
+      b.onclick = function () { lbOpen(Number(b.dataset.zoom), NEWSFLAT); };
+    });
   }
 
   function paintWork(events) {
@@ -132,6 +199,21 @@
       '</div>';
   }
 
+
+  /** โหลดข่าว — ถ้า bootstrap แนบมาให้แล้วก็ใช้ของนั้นเลย ไม่ต้องยิงซ้ำ */
+  function loadNews(preloaded) {
+    if (preloaded) { paintNews(preloaded); return Promise.resolve(); }
+
+    var box = el('newsList');
+    box.innerHTML = '<div class="empty">กำลังโหลดข่าวสาร...</div>';
+    return F.auth('news').then(function (r) {
+      paintNews(r.news || []);
+    }).catch(function (err) {
+      // หลังบ้านยังไม่ได้ deploy รุ่นที่มีข่าว -> ไม่ต้องขึ้น error ให้สมาชิกงง
+      if (String(err.message).indexOf('ไม่รู้จักคำสั่ง') >= 0) { paintNews([]); return; }
+      box.innerHTML = '<div class="card"><div class="note note--err">' + esc(err.message) + '</div></div>';
+    });
+  }
 
   function loadWork() {
     var box = el('workList');
@@ -175,9 +257,10 @@
     var id = f.file_id;
     if (!id) return [f.url];
     return [
+      F.thumbUrl(id, 2048),
+      F.thumbUrl(id, 1600),
+      'https://lh3.googleusercontent.com/d/' + id + '=w2048',
       F.thumbUrl(id, 1000),
-      F.thumbUrl(id, 800),
-      'https://lh3.googleusercontent.com/d/' + id + '=w1000',
       F.thumbUrl(id, 400),
       'https://drive.google.com/uc?export=view&id=' + id
     ];
@@ -198,14 +281,17 @@
     img.src = list[n];
   }
 
-  function lbOpen(i) {
-    if (i < 0 || i >= FLAT.length) return;
+  var lbList = FLAT;        // กองรูปที่กำลังเปิดดูอยู่ (ผลงาน หรือ ข่าว)
+
+  function lbOpen(i, list) {
+    if (list) lbList = list;
+    if (i < 0 || i >= lbList.length) return;
     lbAt = i;
-    var it = FLAT[i];
-    el('lbInfo').textContent = it.event + '  ·  รูปที่ ' + (i + 1) + ' จาก ' + FLAT.length;
+    var it = lbList[i];
+    el('lbInfo').textContent = it.event + '  ·  รูปที่ ' + (i + 1) + ' จาก ' + lbList.length;
     el('lbDl').href = F.dlUrl(it.f.file_id, it.f.url);
     el('lbPrev').disabled = (i === 0);
-    el('lbNext').disabled = (i === FLAT.length - 1);
+    el('lbNext').disabled = (i === lbList.length - 1);
     show(el('lb'), true);
     hideZoom();
     document.body.style.overflow = 'hidden';
@@ -255,7 +341,7 @@
       F.setToken(r.token);
       me = r.member;
       el('inPass').value = '';
-      paintMe(); screen('scApp'); loadWork();
+      paintMe(); screen('scApp'); loadNews(); loadWork();
     }).catch(function (err) {
       say(el('msLogin'), 'err', err.message);
     }).then(function () { F.busy(false); });
@@ -290,7 +376,7 @@
       F.setToken(r.token);
       me = r.member;
       ['inSelfPhone', 'inNew1', 'inNew2'].forEach(function (i) { el(i).value = ''; });
-      paintMe(); screen('scApp'); loadWork();
+      paintMe(); screen('scApp'); loadNews(); loadWork();
     }).catch(function (err) {
       say(el('msSelf'), 'err', err.message);
     }).then(function () { F.busy(false); });
@@ -371,7 +457,7 @@
     var list = el('workList');
     list.addEventListener('click', function (e) {
       var t = e.target.closest('[data-open]');
-      if (t) lbOpen(Number(t.dataset.open));
+      if (t) lbOpen(Number(t.dataset.open), FLAT);
     });
     if (canHover) {
       list.addEventListener('mouseover', function (e) {
@@ -623,7 +709,7 @@
       me = r.member;
       // must = TRUE/RESET แปลว่าแอดมินเปิดสิทธิ์ให้ตั้งรหัสใหม่ -> token เดิมใช้ต่อไม่ได้
       if (me.must === 'TRUE' || me.must === 'RESET') { F.setToken(''); goSelf(true); }
-      else { paintMe(); screen('scApp'); paintWork(r.events || []); }
+      else { paintMe(); screen('scApp'); loadNews(r.news); paintWork(r.events || []); }
     }).catch(function () {
       F.setToken('');
       screen('scLogin');
