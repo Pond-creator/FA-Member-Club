@@ -237,6 +237,14 @@
 
   // ---------------- จัดการสมาชิก ----------------
   /** สรุปจำนวนบนหัวรายชื่อ — ไว้ดูความคืบหน้าว่าใส่เบอร์/ตั้งรหัสไปแล้วกี่คน */
+  var MEM_CHIPS = [
+    { key: 'admin',   cls: '',          text: 'แอดมิน' },
+    { key: 'ready',   cls: ' is-ok',    text: 'พร้อมใช้' },
+    { key: 'waiting', cls: ' is-wait',  text: 'รอตั้งรหัส' },
+    { key: 'nophone', cls: ' is-none',  text: 'ยังไม่มีเบอร์' },
+    { key: 'off',     cls: ' is-off',   text: 'ถูกระงับ' }
+  ];
+
   function memSummary(r) {
     var c = r.count || {};
     var line = 'แสดง ' + (r.shown || r.members.length) + ' คน' +
@@ -245,14 +253,23 @@
 
     if (c.ready === undefined) return '<p class="field-note">' + line + '</p>';
 
-    return '<p class="field-note">' + line + '</p>' +
-      '<div class="memsum">' +
-        '<span class="memsum__i"><b>' + (c.admin || 0) + '</b> แอดมิน</span>' +
-        '<span class="memsum__i is-ok"><b>' + (c.ready || 0) + '</b> พร้อมใช้</span>' +
-        '<span class="memsum__i is-wait"><b>' + (c.waiting || 0) + '</b> รอตั้งรหัส</span>' +
-        '<span class="memsum__i is-none"><b>' + (c.nophone || 0) + '</b> ยังไม่มีเบอร์</span>' +
-        (c.off ? '<span class="memsum__i is-off"><b>' + c.off + '</b> ถูกระงับ</span>' : '') +
+    // ป้ายสรุปกดได้ = ตัวกรอง · ตัวเลขบนป้ายนับจากทั้งชีตเสมอ ไม่เปลี่ยนตามที่กรองอยู่
+    var chips = MEM_CHIPS.map(function (ch) {
+      if (ch.key === 'off' && !c.off && memOnly !== 'off') return '';   // ไม่มีใครโดนระงับก็ไม่ต้องโชว์
+      return '<button class="memsum__i' + ch.cls + (memOnly === ch.key ? ' is-on' : '') +
+             '" data-only="' + ch.key + '"><b>' + (c[ch.key] || 0) + '</b> ' + ch.text + '</button>';
+    }).join('');
+
+    return '<p class="field-note">' + line +
+             (memOnly ? ' · <b>กรองเฉพาะ ' + esc(onlyText(memOnly)) + '</b>' : '') + '</p>' +
+      '<div class="memsum">' + chips +
+        (memOnly ? '<button class="memsum__i memsum__i--clear" data-only="">ล้างตัวกรอง ✕</button>' : '') +
       '</div>';
+  }
+
+  function onlyText(k) {
+    for (var i = 0; i < MEM_CHIPS.length; i++) if (MEM_CHIPS[i].key === k) return MEM_CHIPS[i].text;
+    return k;
   }
 
   // keepMsg = true -> ไม่ล้างข้อความผลด้านบน (ใช้ตอนโหลดรายชื่อใหม่หลังใส่เบอร์/เปิดสิทธิ์
@@ -308,14 +325,16 @@
     });
   }
 
+  var memOnly = '';          // ป้ายสถานะที่กดกรองอยู่ ('' = ดูทุกคน)
+
   function doMemQuery(keepMsg) {
     el('memList').innerHTML = '<div class="empty">กำลังโหลด...</div>';
     if (keepMsg !== true) say(el('msMem'), '', '');
 
-    F.auth('adminMembers', { q: el('inMemQ').value.trim(), limit: 40 }).then(function (r) {
-      if (!r.members.length) { el('memList').innerHTML = '<div class="empty">ไม่พบสมาชิก</div>'; return; }
-      el('memList').innerHTML =
-        memSummary(r) +
+    F.auth('adminMembers', { q: el('inMemQ').value.trim(), limit: 40, only: memOnly }).then(function (r) {
+      // ถึงไม่เจอใครก็ยังต้องโชว์แถบสรุป ไม่งั้นกดล้างตัวกรองไม่ได้ ต้องรีโหลดหน้าอย่างเดียว
+      el('memList').innerHTML = memSummary(r) +
+        (!r.members.length ? '<div class="empty">ไม่พบสมาชิก</div>' : '') +
         r.members.map(function (m) {
           var badge, btn;
           if (m.active === false) {
@@ -355,6 +374,15 @@
             '</div>' + btn + off + del +
           '</div>';
         }).join('');
+
+      // ---- กดป้ายสถานะเพื่อกรอง (กดป้ายเดิมซ้ำ = ล้างตัวกรอง) ----
+      el('memList').querySelectorAll('[data-only]').forEach(function (b) {
+        b.onclick = function () {
+          var k = b.dataset.only;
+          memOnly = (k && k === memOnly) ? '' : k;
+          doMemQuery(true);
+        };
+      });
 
       // ---- ใส่ / แก้เบอร์ ----
       el('memList').querySelectorAll('[data-phone]').forEach(function (b) {

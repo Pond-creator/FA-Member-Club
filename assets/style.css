@@ -705,3 +705,13 @@ textarea { min-height: 72px; resize: vertical; }
 .memsum__i.is-off { background: #f3f1ee; color: #6d675d; border-color: #ddd8d0; }
 /* ปุ่มคืนสิทธิ์ให้เด่นกว่าปุ่มระงับ เพราะเป็นทางออกจากสถานะที่ผิดปกติ */
 .linkx--on { color: var(--gold); font-weight: 700; }
+
+/* ---------- ป้ายสรุปจำนวน = ปุ่มกรอง ---------- */
+.memsum__i { font: inherit; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.memsum__i:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.10); }
+/* ป้ายที่กำลังกรองอยู่ ต้องดูออกชัดว่ากดค้างไว้ ไม่งั้นงงว่าทำไมรายชื่อหายไปเกือบหมด */
+.memsum__i.is-on {
+  box-shadow: 0 0 0 2px currentColor inset;
+  font-weight: 700;
+}
+.memsum__i--clear { background: #fff; color: var(--ink-soft); border-color: var(--line); }
