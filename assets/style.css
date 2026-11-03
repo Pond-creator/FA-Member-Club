@@ -3,6 +3,7 @@
 :root {
   /* ไอคอนโล่สำหรับป้ายระดับสมาชิก — ฝังเป็น SVG ในไฟล์ ไม่ต้องโหลดรูปเพิ่ม */
   --shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 0 24 4v10c0 7-5 11.5-12 14C5 25.5 0 21 0 14V4Z'/%3E%3C/svg%3E");
+  --phone: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1Z'/%3E%3C/svg%3E");
   --expand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 9V3h6v2H5v4Zm12-6h6v6h-2V5h-4Zm6 12v6h-6v-2h4v-4ZM9 21H3v-6h2v4h4Z'/%3E%3C/svg%3E");
   --bg:        #fbf9f5;
   --card:      #ffffff;
@@ -797,3 +798,42 @@ textarea { min-height: 72px; resize: vertical; }
   border: 1px solid #e8cdc6; border-radius: 8px; cursor: pointer;
 }
 .nwpic__x:hover { background: #fff; }
+
+/* ---------- ติดต่อ + ช่องทางสั่งซื้อ (ท้ายหน้าโปรไฟล์) ---------- */
+.contact__h {
+  margin: 0 0 10px; font-size: 14px; font-weight: 700;
+  color: var(--gold); letter-spacing: .2px;
+}
+.contact__h + .shoplist, .contact__h + .contact__tel { margin-bottom: 20px; }
+.contact .contact__h ~ .contact__h { margin-top: 0; }
+
+/* เบอร์โทรเป็นลิงก์ tel: -> บนมือถือแตะแล้วโทรออกได้เลย */
+.contact__tel {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  font-size: 16px; font-weight: 700; letter-spacing: .5px;
+  color: var(--ink); text-decoration: none;
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-soft); border-radius: 12px;
+}
+.contact__telIcon {
+  flex: none; width: 18px; height: 18px;
+  background: var(--gold);
+  -webkit-mask: var(--phone) center/contain no-repeat;
+          mask: var(--phone) center/contain no-repeat;
+}
+
+.shoplist { display: grid; gap: 8px; }
+.shop {
+  display: flex; align-items: center; gap: 11px;
+  padding: 13px 14px;
+  font-size: 14.5px; color: var(--ink); text-decoration: none;
+  background: #fff;
+  border: 1px solid var(--line); border-radius: 12px;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.shop:hover { border-color: var(--sc, var(--gold)); transform: translateX(2px); }
+.shop__dot  { flex: none; font-size: 18px; line-height: 1; }
+.shop__name { flex: 1; min-width: 0; }
+.shop__name b { display: block; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+.shop__go   { flex: none; font-size: 20px; color: var(--ink-soft); line-height: 1; }
