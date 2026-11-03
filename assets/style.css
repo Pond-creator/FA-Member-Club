@@ -699,3 +699,9 @@ textarea { min-height: 72px; resize: vertical; }
 
 .btn-row--end { justify-content: flex-end; }
 .btn-row--end .btn { flex: 0 0 auto; }
+
+/* ---------- บัญชีที่ถูกระงับ ---------- */
+.badge--off { background: #f3f1ee; color: #6d675d; border-color: #ddd8d0; }
+.memsum__i.is-off { background: #f3f1ee; color: #6d675d; border-color: #ddd8d0; }
+/* ปุ่มคืนสิทธิ์ให้เด่นกว่าปุ่มระงับ เพราะเป็นทางออกจากสถานะที่ผิดปกติ */
+.linkx--on { color: var(--gold); font-weight: 700; }

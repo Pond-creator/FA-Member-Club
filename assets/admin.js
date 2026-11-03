@@ -251,6 +251,7 @@
         '<span class="memsum__i is-ok"><b>' + (c.ready || 0) + '</b> พร้อมใช้</span>' +
         '<span class="memsum__i is-wait"><b>' + (c.waiting || 0) + '</b> รอตั้งรหัส</span>' +
         '<span class="memsum__i is-none"><b>' + (c.nophone || 0) + '</b> ยังไม่มีเบอร์</span>' +
+        (c.off ? '<span class="memsum__i is-off"><b>' + c.off + '</b> ถูกระงับ</span>' : '') +
       '</div>';
   }
 
@@ -317,7 +318,11 @@
         memSummary(r) +
         r.members.map(function (m) {
           var badge, btn;
-          if (!m.phone) {
+          if (m.active === false) {
+            // โดนระงับ -> ไม่ต้องโชว์ปุ่มจัดการรหัส เหลือแค่ทางคืนสิทธิ์
+            badge = '<span class="badge badge--off">ระงับอยู่</span>';
+            btn   = '';
+          } else if (!m.phone) {
             // สมาชิกเก่าที่ย้ายมาแล้วยังไม่มีเบอร์ -> เข้าระบบไม่ได้จนกว่าแอดมินจะใส่เบอร์ให้
             badge = '<span class="badge badge--wait">ยังไม่มีเบอร์</span>';
             btn   = '<button class="btn btn--sm" data-phone="' + esc(m.member_id) +
@@ -335,13 +340,19 @@
           var del = '<button class="linkx" data-del="' + esc(m.member_id) +
                     '" data-name="' + esc(m.name) + '" title="ลบออกจากระบบ">ลบ</button>';
 
+          // ระงับ = ตัดทางเข้าแต่เก็บข้อมูลไว้ ใช้กับคนทำผิดกฎ · ลบ = เอาออกถาวร ใช้กับบัญชีที่ไม่ได้ใช้
+          var off = '<button class="linkx' + (m.active === false ? ' linkx--on' : '') +
+                    '" data-off="' + esc(m.member_id) + '" data-name="' + esc(m.name) +
+                    '" data-to="' + (m.active === false ? 'TRUE' : 'FALSE') + '">' +
+                    (m.active === false ? 'คืนสิทธิ์' : 'ระงับ') + '</button>';
+
           return '<div class="row">' +
             '<div class="row__main">' +
               '<div class="row__title">' + esc(m.name) + ' ' + badge + '</div>' +
               '<div class="row__sub">' + esc(m.member_id) +
                 (m.phone ? ' · ' + esc(m.phone) : ' · ยังเข้าระบบไม่ได้') +
                 (m.status === 'Admin' ? ' · แอดมิน' : '') + '</div>' +
-            '</div>' + btn + del +
+            '</div>' + btn + off + del +
           '</div>';
         }).join('');
 
@@ -369,6 +380,33 @@
             }).catch(function (err) {
               say(el('msMem'), 'err', err.message);
             }).then(function () { F.busy(false); });
+          });
+        };
+      });
+
+      // ---- ระงับ / คืนสิทธิ์ ----
+      el('memList').querySelectorAll('[data-off]').forEach(function (b) {
+        b.onclick = function () {
+          var ban = b.dataset.to === 'FALSE';
+          ask({
+            title:  (ban ? 'ระงับ ' : 'คืนสิทธิ์ให้ ') + b.dataset.name + '?',
+            body:   ban ? 'เข้าระบบไม่ได้ทันที และเครื่องที่ค้างล็อกอินอยู่จะหลุดทั้งหมด'
+                        : 'กลับมาเข้าใช้งานได้ตามปกติ ด้วยรหัสเดิมของเค้า',
+            note:   ban ? 'ข้อมูลกับผลงานยังอยู่ครบ กดคืนสิทธิ์ทีหลังได้ตลอด' : '',
+            yes:    ban ? 'ระงับการใช้งาน' : 'คืนสิทธิ์',
+            danger: ban
+          }).then(function (yn) {
+            if (!yn) return;
+            F.busy(true, [ban ? 'กำลังระงับ...' : 'กำลังคืนสิทธิ์...']);
+            return F.auth('adminSetActive', { member_id: b.dataset.off, active: b.dataset.to })
+              .then(function (r) {
+                say(el('msMem'), 'ok', r.msg);
+                el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                doMemQuery(true);
+              }).catch(function (err) {
+                say(el('msMem'), 'err', err.message);
+                el('msMem').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }).then(function () { F.busy(false); });
           });
         };
       });
@@ -487,6 +525,7 @@
   }
 
   function statusText(m) {
+    if (m.active === false) return ['off', 'ระงับอยู่'];
     if (!m.phone)            return ['wait', 'ยังไม่มีเบอร์ — เข้าระบบไม่ได้'];
     if (m.must === 'FALSE')  return ['ok',   'พร้อมใช้งาน'];
     return ['wait', 'รอเจ้าตัวตั้งรหัสเอง'];
